@@ -4,19 +4,46 @@ import { InvoiceList } from "@/components/InvoiceList";
 import { UploadZone } from "@/components/UploadZone";
 import { UVAPreview } from "@/components/UVAPreview";
 import { FileText, Euro, Receipt, CalendarClock } from "lucide-react";
+import { useAuth } from "@/hooks/useAuth";
+import { useInvoices } from "@/hooks/useInvoices";
+import { useMemo } from "react";
 
 const Index = () => {
+  const { user, loading: authLoading, signOut } = useAuth();
+  const { invoices, loading: invoicesLoading, uploadAndScan } = useInvoices();
+
+  const stats = useMemo(() => {
+    const completed = invoices.filter(i => i.ocr_status === "completed");
+    const totalNet = completed.reduce((s, i) => s + (i.net_amount || 0), 0);
+    const totalVat = completed.reduce((s, i) => s + (i.vat_amount || 0), 0);
+    return { count: invoices.length, totalNet, totalVat };
+  }, [invoices]);
+
+  // Show auth page if not logged in
+  if (authLoading) {
+    return (
+      <div className="flex min-h-screen items-center justify-center bg-background">
+        <div className="h-8 w-8 rounded-full border-2 border-accent border-t-transparent animate-spin" />
+      </div>
+    );
+  }
+
+  if (!user) {
+    // Lazy load auth page
+    const AuthPage = require("@/pages/Auth").default;
+    return <AuthPage />;
+  }
+
   return (
     <div className="min-h-screen bg-background">
-      <Sidebar />
+      <Sidebar onSignOut={signOut} userEmail={user.email} />
 
       <main className="ml-64 min-h-screen">
-        {/* Header */}
         <header className="border-b border-border bg-card/80 backdrop-blur-sm px-8 py-5 sticky top-0 z-30">
           <div className="flex items-center justify-between">
             <div>
               <h1 className="font-display text-xl font-bold text-foreground">Dashboard</h1>
-              <p className="text-sm text-muted-foreground">Jänner 2025 · Umsatzsteuervoranmeldung</p>
+              <p className="text-sm text-muted-foreground">Umsatzsteuervoranmeldung · Österreich</p>
             </div>
             <div className="flex items-center gap-3">
               <div className="flex items-center gap-2 rounded-lg bg-success/10 px-3 py-1.5 text-xs font-medium text-success">
@@ -24,55 +51,37 @@ const Index = () => {
                 Alle Systeme aktiv
               </div>
               <div className="h-8 w-8 rounded-full gradient-primary flex items-center justify-center text-xs font-bold text-primary-foreground">
-                MK
+                {user.email?.charAt(0).toUpperCase() || "U"}
               </div>
             </div>
           </div>
         </header>
 
-        {/* Content */}
         <div className="p-8 space-y-6">
-          {/* Stats */}
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-            <StatsCard
-              title="Rechnungen gesamt"
-              value="47"
-              subtitle="Diesen Monat"
-              icon={FileText}
-              trend={{ value: "12%", positive: true }}
-            />
+            <StatsCard title="Rechnungen gesamt" value={String(stats.count)} subtitle="Erfasst" icon={FileText} />
             <StatsCard
               title="Netto-Umsatz"
-              value="€ 17.450"
-              subtitle="Jänner 2025"
+              value={`€ ${stats.totalNet.toLocaleString("de-AT", { minimumFractionDigits: 0 })}`}
               icon={Euro}
-              trend={{ value: "8%", positive: true }}
               variant="accent"
             />
             <StatsCard
               title="Vorsteuer"
-              value="€ 1.845"
+              value={`€ ${stats.totalVat.toLocaleString("de-AT", { minimumFractionDigits: 0 })}`}
               subtitle="Abzugsfähig"
               icon={Receipt}
-              variant="default"
             />
-            <StatsCard
-              title="Nächste UVA"
-              value="15. Mär"
-              subtitle="Noch 62 Tage"
-              icon={CalendarClock}
-              variant="warning"
-            />
+            <StatsCard title="Nächste UVA" value="15. Mär" subtitle="Fällig" icon={CalendarClock} variant="warning" />
           </div>
 
-          {/* Main Grid */}
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
             <div className="lg:col-span-2 space-y-6">
-              <InvoiceList />
+              <InvoiceList invoices={invoices} loading={invoicesLoading} />
               <UVAPreview />
             </div>
             <div>
-              <UploadZone />
+              <UploadZone onUpload={uploadAndScan} />
             </div>
           </div>
         </div>

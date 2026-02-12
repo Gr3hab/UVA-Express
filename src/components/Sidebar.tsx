@@ -1,4 +1,4 @@
-import { LayoutDashboard, FileText, Upload, Calculator, Settings, HelpCircle, TrendingUp } from "lucide-react";
+import { LayoutDashboard, FileText, Upload, Calculator, Settings, HelpCircle, TrendingUp, LogOut } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useState } from "react";
 
@@ -11,7 +11,12 @@ const navItems = [
   { icon: Settings, label: "Einstellungen", active: false },
 ];
 
-export const Sidebar = () => {
+interface SidebarProps {
+  onSignOut?: () => void;
+  userEmail?: string;
+}
+
+export const Sidebar = ({ onSignOut, userEmail }: SidebarProps) => {
   const [activeIndex, setActiveIndex] = useState(0);
 
   return (
@@ -38,17 +43,29 @@ export const Sidebar = () => {
                 : "text-sidebar-foreground/70 hover:text-sidebar-foreground hover:bg-sidebar-accent/50"
             )}
           >
-            <item.icon className="h-4.5 w-4.5" />
+            <item.icon className="h-4 w-4" />
             {item.label}
           </button>
         ))}
       </nav>
 
-      <div className="px-3 pb-4">
+      <div className="px-3 pb-4 space-y-1">
+        {userEmail && (
+          <p className="px-3 py-1 text-xs text-sidebar-foreground/50 truncate">{userEmail}</p>
+        )}
         <button className="flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-sm text-sidebar-foreground/60 hover:text-sidebar-foreground transition-colors">
-          <HelpCircle className="h-4.5 w-4.5" />
+          <HelpCircle className="h-4 w-4" />
           Hilfe & Support
         </button>
+        {onSignOut && (
+          <button
+            onClick={onSignOut}
+            className="flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-sm text-sidebar-foreground/60 hover:text-destructive transition-colors"
+          >
+            <LogOut className="h-4 w-4" />
+            Abmelden
+          </button>
+        )}
       </div>
     </aside>
   );
