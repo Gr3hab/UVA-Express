@@ -14,7 +14,135 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      invoices: {
+        Row: {
+          created_at: string
+          currency: string | null
+          description: string | null
+          file_name: string | null
+          file_path: string | null
+          gross_amount: number | null
+          id: string
+          invoice_date: string | null
+          invoice_number: string | null
+          net_amount: number | null
+          ocr_confidence: number | null
+          ocr_raw_text: string | null
+          ocr_status: string | null
+          updated_at: string
+          user_id: string
+          vat_amount: number | null
+          vat_category: string | null
+          vat_rate: number | null
+          vendor_name: string | null
+        }
+        Insert: {
+          created_at?: string
+          currency?: string | null
+          description?: string | null
+          file_name?: string | null
+          file_path?: string | null
+          gross_amount?: number | null
+          id?: string
+          invoice_date?: string | null
+          invoice_number?: string | null
+          net_amount?: number | null
+          ocr_confidence?: number | null
+          ocr_raw_text?: string | null
+          ocr_status?: string | null
+          updated_at?: string
+          user_id: string
+          vat_amount?: number | null
+          vat_category?: string | null
+          vat_rate?: number | null
+          vendor_name?: string | null
+        }
+        Update: {
+          created_at?: string
+          currency?: string | null
+          description?: string | null
+          file_name?: string | null
+          file_path?: string | null
+          gross_amount?: number | null
+          id?: string
+          invoice_date?: string | null
+          invoice_number?: string | null
+          net_amount?: number | null
+          ocr_confidence?: number | null
+          ocr_raw_text?: string | null
+          ocr_status?: string | null
+          updated_at?: string
+          user_id?: string
+          vat_amount?: number | null
+          vat_category?: string | null
+          vat_rate?: number | null
+          vendor_name?: string | null
+        }
+        Relationships: []
+      }
+      uva_periods: {
+        Row: {
+          created_at: string
+          due_date: string | null
+          id: string
+          kz000_netto: number | null
+          kz000_ust: number | null
+          kz001_netto: number | null
+          kz001_ust: number | null
+          kz006_netto: number | null
+          kz006_ust: number | null
+          kz021_netto: number | null
+          kz021_ust: number | null
+          kz060_vorsteuer: number | null
+          period_month: number
+          period_year: number
+          status: string | null
+          updated_at: string
+          user_id: string
+          zahllast: number | null
+        }
+        Insert: {
+          created_at?: string
+          due_date?: string | null
+          id?: string
+          kz000_netto?: number | null
+          kz000_ust?: number | null
+          kz001_netto?: number | null
+          kz001_ust?: number | null
+          kz006_netto?: number | null
+          kz006_ust?: number | null
+          kz021_netto?: number | null
+          kz021_ust?: number | null
+          kz060_vorsteuer?: number | null
+          period_month: number
+          period_year: number
+          status?: string | null
+          updated_at?: string
+          user_id: string
+          zahllast?: number | null
+        }
+        Update: {
+          created_at?: string
+          due_date?: string | null
+          id?: string
+          kz000_netto?: number | null
+          kz000_ust?: number | null
+          kz001_netto?: number | null
+          kz001_ust?: number | null
+          kz006_netto?: number | null
+          kz006_ust?: number | null
+          kz021_netto?: number | null
+          kz021_ust?: number | null
+          kz060_vorsteuer?: number | null
+          period_month?: number
+          period_year?: number
+          status?: string | null
+          updated_at?: string
+          user_id?: string
+          zahllast?: number | null
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
