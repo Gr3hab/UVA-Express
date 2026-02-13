@@ -1,14 +1,14 @@
 import { LayoutDashboard, FileText, Upload, Calculator, Settings, HelpCircle, TrendingUp, LogOut } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { useState } from "react";
+import { useNavigate, useLocation } from "react-router-dom";
 
 const navItems = [
-  { icon: LayoutDashboard, label: "Dashboard", active: true },
-  { icon: FileText, label: "Rechnungen", active: false },
-  { icon: Upload, label: "Upload", active: false },
-  { icon: Calculator, label: "UVA", active: false },
-  { icon: TrendingUp, label: "Berichte", active: false },
-  { icon: Settings, label: "Einstellungen", active: false },
+  { icon: LayoutDashboard, label: "Dashboard", path: "/" },
+  { icon: FileText, label: "Rechnungen", path: "/" },
+  { icon: Upload, label: "Upload", path: "/" },
+  { icon: Calculator, label: "UVA", path: "/uva" },
+  { icon: TrendingUp, label: "Berichte", path: "/" },
+  { icon: Settings, label: "Einstellungen", path: "/" },
 ];
 
 interface SidebarProps {
@@ -17,7 +17,8 @@ interface SidebarProps {
 }
 
 export const Sidebar = ({ onSignOut, userEmail }: SidebarProps) => {
-  const [activeIndex, setActiveIndex] = useState(0);
+  const navigate = useNavigate();
+  const location = useLocation();
 
   return (
     <aside className="fixed left-0 top-0 z-40 h-screen w-64 gradient-primary flex flex-col">
@@ -32,13 +33,13 @@ export const Sidebar = ({ onSignOut, userEmail }: SidebarProps) => {
       </div>
 
       <nav className="flex-1 px-3 py-4 space-y-1">
-        {navItems.map((item, i) => (
+        {navItems.map((item) => (
           <button
             key={item.label}
-            onClick={() => setActiveIndex(i)}
+            onClick={() => navigate(item.path)}
             className={cn(
               "flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-all duration-200",
-              i === activeIndex
+              location.pathname === item.path
                 ? "bg-sidebar-accent text-sidebar-primary"
                 : "text-sidebar-foreground/70 hover:text-sidebar-foreground hover:bg-sidebar-accent/50"
             )}

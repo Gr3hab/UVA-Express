@@ -2,3 +2,9 @@ project_id = "lljdgjnwcjartondpqfw"
 
 [functions.ocr-invoice]
 verify_jwt = false
+
+[functions.calculate-uva]
+verify_jwt = false
+
+[functions.export-uva-xml]
+verify_jwt = false

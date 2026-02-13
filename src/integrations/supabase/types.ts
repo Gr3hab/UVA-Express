@@ -91,9 +91,57 @@ export type Database = {
           kz001_ust: number | null
           kz006_netto: number | null
           kz006_ust: number | null
+          kz007_netto: number | null
+          kz007_ust: number | null
+          kz008_netto: number | null
+          kz008_ust: number | null
+          kz011_netto: number | null
+          kz012_netto: number | null
+          kz015_netto: number | null
+          kz016_netto: number | null
+          kz017_netto: number | null
+          kz018_netto: number | null
+          kz019_netto: number | null
+          kz020_netto: number | null
           kz021_netto: number | null
           kz021_ust: number | null
+          kz022_netto: number | null
+          kz022_ust: number | null
+          kz029_netto: number | null
+          kz029_ust: number | null
+          kz032_ust: number | null
+          kz037_netto: number | null
+          kz037_ust: number | null
+          kz044_ust: number | null
+          kz048_ust: number | null
+          kz052_netto: number | null
+          kz052_ust: number | null
+          kz056_ust: number | null
+          kz057_ust: number | null
           kz060_vorsteuer: number | null
+          kz061_vorsteuer: number | null
+          kz062_vorsteuer: number | null
+          kz063_vorsteuer: number | null
+          kz064_vorsteuer: number | null
+          kz065_vorsteuer: number | null
+          kz066_vorsteuer: number | null
+          kz067_vorsteuer: number | null
+          kz070_netto: number | null
+          kz071_netto: number | null
+          kz072_netto: number | null
+          kz072_ust: number | null
+          kz073_netto: number | null
+          kz073_ust: number | null
+          kz076_netto: number | null
+          kz077_netto: number | null
+          kz082_vorsteuer: number | null
+          kz083_vorsteuer: number | null
+          kz087_vorsteuer: number | null
+          kz088_netto: number | null
+          kz088_ust: number | null
+          kz089_vorsteuer: number | null
+          kz090_betrag: number | null
+          kz095_betrag: number | null
           period_month: number
           period_year: number
           status: string | null
@@ -111,9 +159,57 @@ export type Database = {
           kz001_ust?: number | null
           kz006_netto?: number | null
           kz006_ust?: number | null
+          kz007_netto?: number | null
+          kz007_ust?: number | null
+          kz008_netto?: number | null
+          kz008_ust?: number | null
+          kz011_netto?: number | null
+          kz012_netto?: number | null
+          kz015_netto?: number | null
+          kz016_netto?: number | null
+          kz017_netto?: number | null
+          kz018_netto?: number | null
+          kz019_netto?: number | null
+          kz020_netto?: number | null
           kz021_netto?: number | null
           kz021_ust?: number | null
+          kz022_netto?: number | null
+          kz022_ust?: number | null
+          kz029_netto?: number | null
+          kz029_ust?: number | null
+          kz032_ust?: number | null
+          kz037_netto?: number | null
+          kz037_ust?: number | null
+          kz044_ust?: number | null
+          kz048_ust?: number | null
+          kz052_netto?: number | null
+          kz052_ust?: number | null
+          kz056_ust?: number | null
+          kz057_ust?: number | null
           kz060_vorsteuer?: number | null
+          kz061_vorsteuer?: number | null
+          kz062_vorsteuer?: number | null
+          kz063_vorsteuer?: number | null
+          kz064_vorsteuer?: number | null
+          kz065_vorsteuer?: number | null
+          kz066_vorsteuer?: number | null
+          kz067_vorsteuer?: number | null
+          kz070_netto?: number | null
+          kz071_netto?: number | null
+          kz072_netto?: number | null
+          kz072_ust?: number | null
+          kz073_netto?: number | null
+          kz073_ust?: number | null
+          kz076_netto?: number | null
+          kz077_netto?: number | null
+          kz082_vorsteuer?: number | null
+          kz083_vorsteuer?: number | null
+          kz087_vorsteuer?: number | null
+          kz088_netto?: number | null
+          kz088_ust?: number | null
+          kz089_vorsteuer?: number | null
+          kz090_betrag?: number | null
+          kz095_betrag?: number | null
           period_month: number
           period_year: number
           status?: string | null
@@ -131,9 +227,57 @@ export type Database = {
           kz001_ust?: number | null
           kz006_netto?: number | null
           kz006_ust?: number | null
+          kz007_netto?: number | null
+          kz007_ust?: number | null
+          kz008_netto?: number | null
+          kz008_ust?: number | null
+          kz011_netto?: number | null
+          kz012_netto?: number | null
+          kz015_netto?: number | null
+          kz016_netto?: number | null
+          kz017_netto?: number | null
+          kz018_netto?: number | null
+          kz019_netto?: number | null
+          kz020_netto?: number | null
           kz021_netto?: number | null
           kz021_ust?: number | null
+          kz022_netto?: number | null
+          kz022_ust?: number | null
+          kz029_netto?: number | null
+          kz029_ust?: number | null
+          kz032_ust?: number | null
+          kz037_netto?: number | null
+          kz037_ust?: number | null
+          kz044_ust?: number | null
+          kz048_ust?: number | null
+          kz052_netto?: number | null
+          kz052_ust?: number | null
+          kz056_ust?: number | null
+          kz057_ust?: number | null
           kz060_vorsteuer?: number | null
+          kz061_vorsteuer?: number | null
+          kz062_vorsteuer?: number | null
+          kz063_vorsteuer?: number | null
+          kz064_vorsteuer?: number | null
+          kz065_vorsteuer?: number | null
+          kz066_vorsteuer?: number | null
+          kz067_vorsteuer?: number | null
+          kz070_netto?: number | null
+          kz071_netto?: number | null
+          kz072_netto?: number | null
+          kz072_ust?: number | null
+          kz073_netto?: number | null
+          kz073_ust?: number | null
+          kz076_netto?: number | null
+          kz077_netto?: number | null
+          kz082_vorsteuer?: number | null
+          kz083_vorsteuer?: number | null
+          kz087_vorsteuer?: number | null
+          kz088_netto?: number | null
+          kz088_ust?: number | null
+          kz089_vorsteuer?: number | null
+          kz090_betrag?: number | null
+          kz095_betrag?: number | null
           period_month?: number
           period_year?: number
           status?: string | null
