@@ -1,4 +1,5 @@
 import { Sidebar } from "@/components/Sidebar";
+import Auth from "@/pages/Auth";
 import { StatsCard } from "@/components/StatsCard";
 import { InvoiceList } from "@/components/InvoiceList";
 import { UploadZone } from "@/components/UploadZone";
@@ -29,9 +30,7 @@ const Index = () => {
   }
 
   if (!user) {
-    // Lazy load auth page
-    const AuthPage = require("@/pages/Auth").default;
-    return <AuthPage />;
+    return <Auth />;
   }
 
   return (
