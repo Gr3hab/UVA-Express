@@ -18,7 +18,7 @@ serve(async (req) => {
     const supabase = createClient(supabaseUrl, supabaseKey);
 
     // Get user from token
-    const publishableKey = Deno.env.get("SUPABASE_PUBLISHABLE_KEY")!;
+    const publishableKey = Deno.env.get("SUPABASE_ANON_KEY")!;
     const userClient = createClient(supabaseUrl, publishableKey, {
       global: { headers: { Authorization: authHeader } },
     });
@@ -31,19 +31,33 @@ serve(async (req) => {
     // Update status to processing
     await supabase.from("invoices").update({ ocr_status: "processing" }).eq("id", invoiceId);
 
-    // Download the file to get base64
-    const fileResponse = await fetch(fileUrl, {
-      headers: { Authorization: authHeader, apikey: publishableKey },
-    });
-    if (!fileResponse.ok) throw new Error("Failed to download file");
+    // Download the file to get base64 - use service role for private bucket
+    let fileBuffer: ArrayBuffer;
+    let mimeType: string;
 
-    const fileBuffer = await fileResponse.arrayBuffer();
+    if (fileUrl.startsWith("data:")) {
+      // Already a data URL
+      const match = fileUrl.match(/^data:([^;]+);base64,(.+)$/);
+      if (!match) throw new Error("Invalid data URL");
+      mimeType = match[1];
+      const binaryStr = atob(match[2]);
+      const bytes = new Uint8Array(binaryStr.length);
+      for (let i = 0; i < binaryStr.length; i++) bytes[i] = binaryStr.charCodeAt(i);
+      fileBuffer = bytes.buffer;
+    } else {
+      // Download from storage using service role
+      const { data: fileData, error: dlError } = await supabase.storage
+        .from("invoices")
+        .download(fileUrl.includes("/invoices/") ? fileUrl.split("/invoices/").pop()! : fileUrl);
+      if (dlError || !fileData) throw new Error("Failed to download file: " + (dlError?.message || "unknown"));
+      fileBuffer = await fileData.arrayBuffer();
+
+      const ext = fileUrl.split(".").pop()?.toLowerCase() || "jpg";
+      const mimeMap: Record<string, string> = { jpg: "image/jpeg", jpeg: "image/jpeg", png: "image/png", pdf: "application/pdf", webp: "image/webp" };
+      mimeType = mimeMap[ext] || "image/jpeg";
+    }
+
     const base64 = btoa(String.fromCharCode(...new Uint8Array(fileBuffer)));
-
-    // Determine mime type from URL
-    const ext = fileUrl.split(".").pop()?.toLowerCase() || "jpg";
-    const mimeMap: Record<string, string> = { jpg: "image/jpeg", jpeg: "image/jpeg", png: "image/png", pdf: "application/pdf", webp: "image/webp" };
-    const mimeType = mimeMap[ext] || "image/jpeg";
 
     const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
     if (!LOVABLE_API_KEY) throw new Error("LOVABLE_API_KEY is not configured");
