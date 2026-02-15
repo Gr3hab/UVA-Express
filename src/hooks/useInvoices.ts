@@ -48,15 +48,9 @@ export const useInvoices = () => {
       .single();
     if (insertError) throw insertError;
 
-    // Get signed URL for the file
-    const { data: signedUrlData } = await supabase.storage
-      .from("invoices")
-      .createSignedUrl(filePath, 300);
-    if (!signedUrlData?.signedUrl) throw new Error("Could not create signed URL");
-
-    // Trigger OCR
+    // Trigger OCR with file path (edge function downloads via service role)
     const { data: ocrResult, error: ocrError } = await supabase.functions.invoke("ocr-invoice", {
-      body: { invoiceId: (invoice as any).id, fileUrl: signedUrlData.signedUrl },
+      body: { invoiceId: (invoice as any).id, fileUrl: filePath },
     });
 
     if (ocrError) throw ocrError;
