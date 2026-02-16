@@ -19,16 +19,22 @@ export type Database = {
           created_at: string
           currency: string | null
           description: string | null
+          export_delivery: boolean
           file_name: string | null
           file_path: string | null
           gross_amount: number | null
           id: string
+          ig_erwerb: boolean
+          ig_lieferung: boolean
           invoice_date: string | null
           invoice_number: string | null
+          invoice_type: string
           net_amount: number | null
           ocr_confidence: number | null
           ocr_raw_text: string | null
           ocr_status: string | null
+          reverse_charge: boolean
+          tax_treatment: string
           updated_at: string
           user_id: string
           vat_amount: number | null
@@ -40,16 +46,22 @@ export type Database = {
           created_at?: string
           currency?: string | null
           description?: string | null
+          export_delivery?: boolean
           file_name?: string | null
           file_path?: string | null
           gross_amount?: number | null
           id?: string
+          ig_erwerb?: boolean
+          ig_lieferung?: boolean
           invoice_date?: string | null
           invoice_number?: string | null
+          invoice_type?: string
           net_amount?: number | null
           ocr_confidence?: number | null
           ocr_raw_text?: string | null
           ocr_status?: string | null
+          reverse_charge?: boolean
+          tax_treatment?: string
           updated_at?: string
           user_id: string
           vat_amount?: number | null
@@ -61,16 +73,22 @@ export type Database = {
           created_at?: string
           currency?: string | null
           description?: string | null
+          export_delivery?: boolean
           file_name?: string | null
           file_path?: string | null
           gross_amount?: number | null
           id?: string
+          ig_erwerb?: boolean
+          ig_lieferung?: boolean
           invoice_date?: string | null
           invoice_number?: string | null
+          invoice_type?: string
           net_amount?: number | null
           ocr_confidence?: number | null
           ocr_raw_text?: string | null
           ocr_status?: string | null
+          reverse_charge?: boolean
+          tax_treatment?: string
           updated_at?: string
           user_id?: string
           vat_amount?: number | null

@@ -84,26 +84,33 @@ Extrahiere aus dem Rechnungsbild/-dokument folgende Informationen:
 - vat_amount: USt-Betrag in Euro (nur Zahl)
 - gross_amount: Bruttobetrag in Euro (nur Zahl)
 - description: Kurzbeschreibung der Leistung/Ware
-- vat_category: USt-Kategorie nach österreichischem Recht ("20%", "10%", "13%", "0%")
+- vat_category: USt-Kategorie ("20%", "10%", "13%", "0%")
+- invoice_type: "eingang" (Eingangsrechnung = Einkauf, an mich gerichtet) oder "ausgang" (Ausgangsrechnung = Verkauf, von mir ausgestellt). Im Zweifel: "eingang"
+- tax_treatment: Steuerliche Behandlung:
+  "normal" = Normale österreichische USt
+  "ig_erwerb" = IG Erwerb (EU-Lieferant, Reverse Charge)
+  "reverse_charge_19_1" = RC § 19 Abs 1 (ausländischer Leistender)
+  "reverse_charge_19_1a" = Bauleistungen § 19 Abs 1a
+  "reverse_charge_19_1b" = Sicherungseigentum § 19 Abs 1b
+  "reverse_charge_19_1d" = Schrott § 19 Abs 1d
+  "export" = Ausfuhrlieferung
+  "ig_lieferung" = IG Lieferung
+  "einfuhr" = Import Drittland
+  "grundstueck" = Grundstücksumsatz
+  "kleinunternehmer" = Kleinunternehmerbefreiung
+  "steuerbefreit_sonstige" = Sonstige Befreiung
 
-Österreichische USt-Sätze:
-- 20% Normalsteuersatz (Standard)
-- 10% ermäßigter Satz (Lebensmittel, Bücher, Personenbeförderung, Wohnraumvermietung)
-- 13% ermäßigter Satz (Blumen, Tierfutter, Kunstgegenstände, Filmvorführungen)
-- 0% steuerbefreit (Ausfuhrlieferungen, innergemeinschaftliche Lieferungen)
+Erkennungshinweise:
+- "Reverse Charge" auf Rechnung → entsprechende reverse_charge Kategorie
+- EU-UID ohne USt → ig_erwerb
+- "steuerfreie ig Lieferung" → ig_lieferung
+- Kleinunternehmer-Vermerk → kleinunternehmer
 
-Prüfe die Rechnung auf Pflichtangaben nach § 11 UStG:
-1. Name und Anschrift des Lieferanten
-2. Name und Anschrift des Empfängers
-3. Menge und Bezeichnung der Gegenstände/Leistungen
-4. Tag/Zeitraum der Lieferung/Leistung
-5. Entgelt und USt-Betrag
-6. USt-Satz
-7. UID-Nummer des Lieferanten
-8. Fortlaufende Rechnungsnummer
-9. Ausstellungsdatum
+Österreichische USt-Sätze: 20% (Normal), 10% (ermäßigt), 13% (ermäßigt), 0% (befreit)
 
-Gib ein confidence-Feld (0-100) an, wie sicher du dir bei der Extraktion bist.`,
+Prüfe § 11 UStG Pflichtangaben (Name/Anschrift, Menge/Bezeichnung, Datum, Entgelt, USt, UID, Rechnungsnr).
+
+Gib ein confidence-Feld (0-100) an.`,
           },
           {
             role: "user",
@@ -131,10 +138,12 @@ Gib ein confidence-Feld (0-100) an, wie sicher du dir bei der Extraktion bist.`,
                   gross_amount: { type: "number" },
                   description: { type: "string" },
                   vat_category: { type: "string", enum: ["20%", "10%", "13%", "0%"] },
+                  invoice_type: { type: "string", enum: ["eingang", "ausgang"], description: "eingang = purchase, ausgang = sales" },
+                  tax_treatment: { type: "string", enum: ["normal", "ig_erwerb", "reverse_charge_19_1", "reverse_charge_19_1a", "reverse_charge_19_1b", "reverse_charge_19_1d", "export", "ig_lieferung", "einfuhr", "grundstueck", "kleinunternehmer", "steuerbefreit_sonstige"] },
                   confidence: { type: "number", description: "0-100 confidence score" },
                   missing_requirements: { type: "array", items: { type: "string" }, description: "Missing mandatory fields per §11 UStG" },
                 },
-                required: ["vendor_name", "net_amount", "vat_rate", "vat_amount", "gross_amount", "vat_category", "confidence"],
+                required: ["vendor_name", "net_amount", "vat_rate", "vat_amount", "gross_amount", "vat_category", "invoice_type", "tax_treatment", "confidence"],
                 additionalProperties: false,
               },
             },
@@ -171,6 +180,11 @@ Gib ein confidence-Feld (0-100) an, wie sicher du dir bei der Extraktion bist.`,
     console.log("Extracted:", extracted);
 
     // Update invoice with extracted data
+    const invoiceType = extracted.invoice_type || "eingang";
+    const taxTreatment = extracted.tax_treatment || "normal";
+    const isRC = taxTreatment.startsWith("reverse_charge");
+    const isIG = taxTreatment === "ig_erwerb" || taxTreatment === "ig_lieferung";
+
     const { error: updateError } = await supabase.from("invoices").update({
       vendor_name: extracted.vendor_name,
       invoice_number: extracted.invoice_number || null,
@@ -181,6 +195,12 @@ Gib ein confidence-Feld (0-100) an, wie sicher du dir bei der Extraktion bist.`,
       gross_amount: extracted.gross_amount,
       description: extracted.description || null,
       vat_category: extracted.vat_category,
+      invoice_type: invoiceType,
+      tax_treatment: taxTreatment,
+      reverse_charge: isRC,
+      ig_erwerb: taxTreatment === "ig_erwerb",
+      ig_lieferung: taxTreatment === "ig_lieferung",
+      export_delivery: taxTreatment === "export",
       ocr_confidence: extracted.confidence,
       ocr_status: "completed",
     }).eq("id", invoiceId);
