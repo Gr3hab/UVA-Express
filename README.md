@@ -1,3 +1,18 @@
+# UVA Express – Umsatzsteuervoranmeldung für österreichische Kleinunternehmer
+
+Die schnellste und einfachste UVA-Software für Einzelunternehmer und Kleinbetriebe in Österreich.
+
+## Warum UVA Express?
+
+- **Zeit sparen**: UVA in Minuten statt Stunden
+- **Geld sparen**: Weniger Stunden beim Steuerberater
+- **KI-Scanner**: Rechnungen automatisch erfassen und kategorisieren
+- **Übersichtlich**: Alle Kennzahlen nach U30-Formular
+- **FinanzOnline**: XML-Export für direkte Übermittlung
+- **§11 UStG**: Automatische Prüfung der Pflichtangaben
+
+---
+
 # Welcome to your Lovable project
 
 ## Project info

@@ -27,8 +27,8 @@ export const Sidebar = ({ onSignOut, userEmail }: SidebarProps) => {
           <Calculator className="h-5 w-5 text-accent-foreground" />
         </div>
         <div>
-          <h1 className="font-display text-lg font-bold text-primary-foreground">VAT Pilot</h1>
-          <p className="text-xs text-sidebar-foreground/60">Österreich</p>
+          <h1 className="font-display text-lg font-bold text-primary-foreground">UVA Express</h1>
+          <p className="text-xs text-sidebar-foreground/60">UVA in Minuten statt Stunden</p>
         </div>
       </div>
 

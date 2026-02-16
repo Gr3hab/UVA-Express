@@ -36,8 +36,8 @@ const AuthPage = () => {
           <div className="inline-flex h-14 w-14 items-center justify-center rounded-2xl gradient-accent mb-4">
             <Calculator className="h-7 w-7 text-accent-foreground" />
           </div>
-          <h1 className="font-display text-2xl font-bold text-foreground">VAT Pilot</h1>
-          <p className="text-sm text-muted-foreground mt-1">Dein USt-Autopilot für Österreich</p>
+          <h1 className="font-display text-2xl font-bold text-foreground">UVA Express</h1>
+          <p className="text-sm text-muted-foreground mt-1">Ihre UVA in Minuten – Sparen Sie beim Steuerberater</p>
         </div>
 
         <div className="rounded-xl bg-card card-shadow p-6">
