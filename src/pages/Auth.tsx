@@ -107,6 +107,12 @@ const AuthPage = () => {
             </button>
           </div>
         </div>
+
+        <div className="mt-6 flex items-center justify-center gap-4 text-xs text-muted-foreground">
+          <a href="/impressum" className="hover:text-foreground transition-colors">Impressum</a>
+          <span>·</span>
+          <a href="/datenschutz" className="hover:text-foreground transition-colors">Datenschutz</a>
+        </div>
       </div>
     </div>
   );
