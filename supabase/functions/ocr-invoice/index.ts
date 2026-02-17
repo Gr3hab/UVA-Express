@@ -6,12 +6,28 @@ const corsHeaders = {
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version",
 };
 
+const UUID_REGEX = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
+function validateOcrInput(body: unknown): { invoiceId: string; fileUrl: string } {
+  if (!body || typeof body !== "object") throw new Error("INVALID_INPUT");
+  const { invoiceId, fileUrl } = body as Record<string, unknown>;
+  if (typeof invoiceId !== "string" || !UUID_REGEX.test(invoiceId)) throw new Error("INVALID_INPUT");
+  if (typeof fileUrl !== "string" || fileUrl.length === 0 || fileUrl.length > 1000) throw new Error("INVALID_INPUT");
+  // Only allow storage paths or data URLs
+  if (!fileUrl.startsWith("data:") && !fileUrl.match(/^[a-zA-Z0-9\-_\/\.]+$/)) throw new Error("INVALID_INPUT");
+  return { invoiceId, fileUrl };
+}
+
 serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
 
   try {
     const authHeader = req.headers.get("Authorization");
-    if (!authHeader) throw new Error("No authorization header");
+    if (!authHeader) {
+      return new Response(JSON.stringify({ error: "Nicht autorisiert" }), {
+        status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
 
     const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
     const supabaseKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
@@ -23,10 +39,22 @@ serve(async (req) => {
       global: { headers: { Authorization: authHeader } },
     });
     const { data: { user }, error: userError } = await userClient.auth.getUser();
-    if (userError || !user) throw new Error("Unauthorized");
+    if (userError || !user) {
+      return new Response(JSON.stringify({ error: "Nicht autorisiert" }), {
+        status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
 
-    const { invoiceId, fileUrl } = await req.json();
-    if (!invoiceId || !fileUrl) throw new Error("invoiceId and fileUrl are required");
+    let invoiceId: string, fileUrl: string;
+    try {
+      const parsed = validateOcrInput(await req.json());
+      invoiceId = parsed.invoiceId;
+      fileUrl = parsed.fileUrl;
+    } catch {
+      return new Response(JSON.stringify({ error: "Ungültige Eingabedaten" }), {
+        status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
 
     // Update status to processing
     await supabase.from("invoices").update({ ocr_status: "processing" }).eq("id", invoiceId);
@@ -36,20 +64,18 @@ serve(async (req) => {
     let mimeType: string;
 
     if (fileUrl.startsWith("data:")) {
-      // Already a data URL
       const match = fileUrl.match(/^data:([^;]+);base64,(.+)$/);
-      if (!match) throw new Error("Invalid data URL");
+      if (!match) throw new Error("INVALID_DATA_URL");
       mimeType = match[1];
       const binaryStr = atob(match[2]);
       const bytes = new Uint8Array(binaryStr.length);
       for (let i = 0; i < binaryStr.length; i++) bytes[i] = binaryStr.charCodeAt(i);
       fileBuffer = bytes.buffer;
     } else {
-      // Download from storage using service role
       const { data: fileData, error: dlError } = await supabase.storage
         .from("invoices")
         .download(fileUrl.includes("/invoices/") ? fileUrl.split("/invoices/").pop()! : fileUrl);
-      if (dlError || !fileData) throw new Error("Failed to download file: " + (dlError?.message || "unknown"));
+      if (dlError || !fileData) throw new Error("FILE_DOWNLOAD_FAILED");
       fileBuffer = await fileData.arrayBuffer();
 
       const ext = fileUrl.split(".").pop()?.toLowerCase() || "jpg";
@@ -60,7 +86,7 @@ serve(async (req) => {
     const base64 = btoa(String.fromCharCode(...new Uint8Array(fileBuffer)));
 
     const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
-    if (!LOVABLE_API_KEY) throw new Error("LOVABLE_API_KEY is not configured");
+    if (!LOVABLE_API_KEY) throw new Error("AI_NOT_CONFIGURED");
 
     // Call AI to extract invoice data
     const aiResponse = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
@@ -159,31 +185,31 @@ Gib ein confidence-Feld (0-100) an.`,
       
       if (aiResponse.status === 429) {
         await supabase.from("invoices").update({ ocr_status: "error" }).eq("id", invoiceId);
-        return new Response(JSON.stringify({ error: "Rate limit erreicht. Bitte versuche es in einer Minute erneut." }), {
+        return new Response(JSON.stringify({ error: "Zu viele Anfragen. Bitte versuchen Sie es in einer Minute erneut." }), {
           status: 429, headers: { ...corsHeaders, "Content-Type": "application/json" },
         });
       }
       if (aiResponse.status === 402) {
         await supabase.from("invoices").update({ ocr_status: "error" }).eq("id", invoiceId);
-        return new Response(JSON.stringify({ error: "AI-Guthaben aufgebraucht." }), {
+        return new Response(JSON.stringify({ error: "AI-Kontingent aufgebraucht." }), {
           status: 402, headers: { ...corsHeaders, "Content-Type": "application/json" },
         });
       }
-      throw new Error(`AI gateway error: ${aiResponse.status}`);
+      await supabase.from("invoices").update({ ocr_status: "error" }).eq("id", invoiceId);
+      throw new Error("AI_PROCESSING_FAILED");
     }
 
     const aiData = await aiResponse.json();
     const toolCall = aiData.choices?.[0]?.message?.tool_calls?.[0];
-    if (!toolCall) throw new Error("No tool call in AI response");
+    if (!toolCall) throw new Error("AI_NO_RESULT");
 
     const extracted = JSON.parse(toolCall.function.arguments);
-    console.log("Extracted:", extracted);
+    console.log("Extracted invoice data successfully");
 
     // Update invoice with extracted data
     const invoiceType = extracted.invoice_type || "eingang";
     const taxTreatment = extracted.tax_treatment || "normal";
     const isRC = taxTreatment.startsWith("reverse_charge");
-    const isIG = taxTreatment === "ig_erwerb" || taxTreatment === "ig_lieferung";
 
     const { error: updateError } = await supabase.from("invoices").update({
       vendor_name: extracted.vendor_name,
@@ -207,7 +233,7 @@ Gib ein confidence-Feld (0-100) an.`,
 
     if (updateError) {
       console.error("Update error:", updateError);
-      throw new Error("Failed to update invoice");
+      throw new Error("DB_UPDATE_FAILED");
     }
 
     return new Response(JSON.stringify({
@@ -218,7 +244,7 @@ Gib ein confidence-Feld (0-100) an.`,
     });
   } catch (e) {
     console.error("OCR error:", e);
-    return new Response(JSON.stringify({ error: e instanceof Error ? e.message : "Unknown error" }), {
+    return new Response(JSON.stringify({ error: "Rechnung konnte nicht verarbeitet werden. Bitte versuchen Sie es erneut." }), {
       status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
   }

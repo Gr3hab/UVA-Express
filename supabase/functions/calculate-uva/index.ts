@@ -70,12 +70,24 @@ const corsHeaders = {
  *   Zahllast = Summe USt (Abschnitte 1+4+5) − Summe Vorsteuer (Abschnitt 6+7)
  */
 
+function validateInput(body: unknown): { year: number; month: number } {
+  if (!body || typeof body !== "object") throw new Error("INVALID_INPUT");
+  const { year, month } = body as Record<string, unknown>;
+  if (typeof year !== "number" || !Number.isInteger(year) || year < 2000 || year > 2100) throw new Error("INVALID_INPUT");
+  if (typeof month !== "number" || !Number.isInteger(month) || month < 1 || month > 12) throw new Error("INVALID_INPUT");
+  return { year, month };
+}
+
 serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
 
   try {
     const authHeader = req.headers.get("Authorization");
-    if (!authHeader) throw new Error("No authorization header");
+    if (!authHeader) {
+      return new Response(JSON.stringify({ error: "Nicht autorisiert" }), {
+        status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
 
     const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
     const supabaseKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
@@ -86,10 +98,22 @@ serve(async (req) => {
       global: { headers: { Authorization: authHeader } },
     });
     const { data: { user }, error: userError } = await userClient.auth.getUser();
-    if (userError || !user) throw new Error("Unauthorized");
+    if (userError || !user) {
+      return new Response(JSON.stringify({ error: "Nicht autorisiert" }), {
+        status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
 
-    const { year, month } = await req.json();
-    if (!year || !month) throw new Error("year and month are required");
+    let year: number, month: number;
+    try {
+      const parsed = validateInput(await req.json());
+      year = parsed.year;
+      month = parsed.month;
+    } catch {
+      return new Response(JSON.stringify({ error: "Ungültige Eingabedaten. Jahr (2000-2100) und Monat (1-12) erforderlich." }), {
+        status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
 
     // Date range for this period
     const startDate = `${year}-${String(month).padStart(2, "0")}-01`;
@@ -112,29 +136,23 @@ serve(async (req) => {
     // Initialize all KZ fields to 0
     // ──────────────────────────────────────────────
     const kz: Record<string, number> = {
-      // Abschnitt 1: Steuerpflichtige Umsätze
       "022_netto": 0, "022_ust": 0,
       "029_netto": 0, "029_ust": 0,
       "006_netto": 0, "006_ust": 0,
       "037_netto": 0, "037_ust": 0,
       "052_netto": 0, "052_ust": 0,
       "007_netto": 0, "007_ust": 0,
-      // Abschnitt 2: Steuerfrei MIT Vorsteuerabzug
       "011_netto": 0, "012_netto": 0, "015_netto": 0,
       "017_netto": 0, "018_netto": 0,
-      // Abschnitt 3: Steuerfrei OHNE Vorsteuerabzug
       "019_netto": 0, "016_netto": 0, "020_netto": 0,
-      // Abschnitt 4: Weiters zu versteuern (nur Steuer)
       "056_ust": 0, "057_ust": 0, "048_ust": 0,
       "044_ust": 0, "032_ust": 0,
-      // Abschnitt 5: IG Erwerbe
       "070_netto": 0, "071_netto": 0,
       "072_netto": 0, "072_ust": 0,
       "073_netto": 0, "073_ust": 0,
       "008_netto": 0, "008_ust": 0,
       "088_netto": 0, "088_ust": 0,
       "076_netto": 0, "077_netto": 0,
-      // Abschnitt 6: Vorsteuer
       "060_vorsteuer": 0,
       "061_vorsteuer": 0, "083_vorsteuer": 0,
       "065_vorsteuer": 0, "066_vorsteuer": 0,
@@ -142,18 +160,16 @@ serve(async (req) => {
       "089_vorsteuer": 0, "064_vorsteuer": 0,
       "062_vorsteuer": 0, "063_vorsteuer": 0,
       "067_vorsteuer": 0,
-      // Abschnitt 7
       "090_betrag": 0,
     };
 
-    // Helper to get rate key
     const rateToKZ = (rate: number): string => {
       if (rate === 20) return "022";
       if (rate === 10) return "029";
       if (rate === 13) return "006";
       if (rate === 19) return "037";
       if (rate === 5) return "007";
-      return "022"; // Default to 20%
+      return "022";
     };
 
     const igRateToKZ = (rate: number): string => {
@@ -164,9 +180,6 @@ serve(async (req) => {
       return "072";
     };
 
-    // ──────────────────────────────────────────────
-    // Process each invoice and map to KZ fields
-    // ──────────────────────────────────────────────
     let ausgangCount = 0;
     let eingangCount = 0;
     let igCount = 0;
@@ -179,17 +192,10 @@ serve(async (req) => {
       const treatment = inv.tax_treatment || "normal";
 
       if (type === "ausgang") {
-        // ═══════════════════════════════════════════
-        // AUSGANGSRECHNUNGEN (Sales/Output invoices)
-        // → Generate Umsatzsteuer (KZ 022-037)
-        // ═══════════════════════════════════════════
         ausgangCount++;
-
         if (treatment === "export") {
-          // Ausfuhrlieferung – steuerbefreit MIT Vorsteuerabzug (KZ 011)
           kz["011_netto"] += net;
         } else if (treatment === "ig_lieferung") {
-          // IG Lieferung – steuerbefreit MIT Vorsteuerabzug (KZ 015)
           kz["015_netto"] += net;
         } else if (treatment === "lohnveredelung") {
           kz["012_netto"] += net;
@@ -198,140 +204,93 @@ serve(async (req) => {
         } else if (treatment === "fahrzeug_ohne_uid") {
           kz["018_netto"] += net;
         } else if (treatment === "grundstueck") {
-          // Steuerbefreit OHNE Vorsteuerabzug
           kz["019_netto"] += net;
         } else if (treatment === "kleinunternehmer") {
           kz["016_netto"] += net;
         } else if (treatment === "steuerbefreit_sonstige") {
           kz["020_netto"] += net;
         } else {
-          // Normal steuerpflichtige Umsätze
           const rateKZ = rateToKZ(rate);
           kz[`${rateKZ}_netto`] += net;
           kz[`${rateKZ}_ust`] += vat;
         }
       } else if (type === "eingang") {
-        // ═══════════════════════════════════════════
-        // EINGANGSRECHNUNGEN (Purchase/Input invoices)
-        // → Generate Vorsteuer (KZ 060 etc.)
-        // ═══════════════════════════════════════════
         eingangCount++;
-
         if (treatment === "ig_erwerb") {
-          // IG Erwerb – Erwerbsteuer + Vorsteuerabzug
           igCount++;
           const igKZ = igRateToKZ(rate);
           kz[`${igKZ}_netto`] += net;
           kz[`${igKZ}_ust`] += vat;
-          kz["070_netto"] += net; // Gesamtbetrag IG Erwerbe
-
-          // IG Erwerbe: USt und Vorsteuer gleichen sich grundsätzlich aus
+          kz["070_netto"] += net;
           kz["061_vorsteuer"] += vat;
         } else if (treatment === "reverse_charge_19_1") {
-          // Reverse Charge § 19 Abs 1 – Leistender im Ausland
           kz["057_ust"] += vat;
           kz["083_vorsteuer"] += vat;
         } else if (treatment === "reverse_charge_19_1a") {
-          // Bauleistungen § 19 Abs 1a
           kz["044_ust"] += vat;
           kz["087_vorsteuer"] += vat;
         } else if (treatment === "reverse_charge_19_1b") {
-          // Sicherungseigentum § 19 Abs 1b
           kz["032_ust"] += vat;
           kz["089_vorsteuer"] += vat;
         } else if (treatment === "reverse_charge_19_1d") {
-          // Schrott § 19 Abs 1d
           kz["032_ust"] += vat;
           kz["089_vorsteuer"] += vat;
         } else if (treatment === "reverse_charge_19_1_3_4") {
-          // § 19 Abs 1 dritter und vierter Satz
           kz["048_ust"] += vat;
           kz["066_vorsteuer"] += vat;
         } else if (treatment === "einfuhr") {
-          // Import – Einfuhr-USt
           kz["065_vorsteuer"] += vat;
         } else if (treatment === "eust_abgabenkonto") {
-          // EUSt auf Abgabenkonto
           kz["062_vorsteuer"] += vat;
         } else {
-          // Normale Eingangsrechnung → Vorsteuer KZ 060
           kz["060_vorsteuer"] += vat;
         }
       }
     }
 
-    // ──────────────────────────────────────────────
-    // ZAHLLAST-BERECHNUNG nach U30 Formular
-    // ──────────────────────────────────────────────
-    
-    // Summe Umsatzsteuer (Abschnitt 1: steuerpflichtige Umsätze)
     const summeUst = kz["022_ust"] + kz["029_ust"] + kz["006_ust"] + kz["037_ust"]
       + kz["052_ust"] + kz["007_ust"];
-
-    // Summe Steuerschuld (Abschnitt 4: weiters zu versteuern)
     const summeSteuerschuld = kz["056_ust"] + kz["057_ust"] + kz["048_ust"]
       + kz["044_ust"] + kz["032_ust"];
-
-    // Summe IG Erwerb USt (Abschnitt 5)
     const summeIGUst = kz["072_ust"] + kz["073_ust"] + kz["008_ust"] + kz["088_ust"];
-
-    // GESAMT-USt (geschuldet)
     const gesamtUst = summeUst + summeSteuerschuld + summeIGUst;
-
-    // Summe Vorsteuer (Abschnitt 6)
     const summeVorsteuer = kz["060_vorsteuer"] + kz["061_vorsteuer"] + kz["083_vorsteuer"]
       + kz["065_vorsteuer"] + kz["066_vorsteuer"] + kz["082_vorsteuer"]
       + kz["087_vorsteuer"] + kz["089_vorsteuer"] + kz["064_vorsteuer"]
       + kz["062_vorsteuer"] + kz["063_vorsteuer"] + kz["067_vorsteuer"];
-
-    // Sonstige Berichtigungen (Abschnitt 7)
     const sonstigeBerichtigungen = kz["090_betrag"];
-
-    // KZ 095: Zahllast = Gesamt-USt - Vorsteuer + Berichtigungen
-    // Positiv = Zahllast (an FA zu zahlen)
-    // Negativ = Gutschrift (vom FA zu erhalten)
     const zahllast = gesamtUst - summeVorsteuer + sonstigeBerichtigungen;
     const kz095 = zahllast;
 
-    // Fälligkeitsdatum: 15. des zweitfolgenden Monats
     const dueMonth = month + 2 > 12 ? (month + 2 - 12) : month + 2;
     const dueYear = month + 2 > 12 ? year + 1 : year;
     const dueDate = `${dueYear}-${String(dueMonth).padStart(2, "0")}-15`;
 
-    // ──────────────────────────────────────────────
-    // Upsert UVA period
-    // ──────────────────────────────────────────────
     const uvaData: Record<string, any> = {
       user_id: user.id,
       period_year: year,
       period_month: month,
       status: "calculated",
-      // Abschnitt 1
       kz022_netto: kz["022_netto"], kz022_ust: kz["022_ust"],
       kz029_netto: kz["029_netto"], kz029_ust: kz["029_ust"],
       kz006_netto: kz["006_netto"], kz006_ust: kz["006_ust"],
       kz037_netto: kz["037_netto"], kz037_ust: kz["037_ust"],
       kz052_netto: kz["052_netto"], kz052_ust: kz["052_ust"],
       kz007_netto: kz["007_netto"], kz007_ust: kz["007_ust"],
-      // Abschnitt 2
       kz011_netto: kz["011_netto"], kz012_netto: kz["012_netto"],
       kz015_netto: kz["015_netto"], kz017_netto: kz["017_netto"],
       kz018_netto: kz["018_netto"],
-      // Abschnitt 3
       kz019_netto: kz["019_netto"], kz016_netto: kz["016_netto"],
       kz020_netto: kz["020_netto"],
-      // Abschnitt 4
       kz056_ust: kz["056_ust"], kz057_ust: kz["057_ust"],
       kz048_ust: kz["048_ust"], kz044_ust: kz["044_ust"],
       kz032_ust: kz["032_ust"],
-      // Abschnitt 5
       kz070_netto: kz["070_netto"], kz071_netto: kz["071_netto"],
       kz072_netto: kz["072_netto"], kz072_ust: kz["072_ust"],
       kz073_netto: kz["073_netto"], kz073_ust: kz["073_ust"],
       kz008_netto: kz["008_netto"], kz008_ust: kz["008_ust"],
       kz088_netto: kz["088_netto"], kz088_ust: kz["088_ust"],
       kz076_netto: kz["076_netto"], kz077_netto: kz["077_netto"],
-      // Abschnitt 6
       kz060_vorsteuer: kz["060_vorsteuer"],
       kz061_vorsteuer: kz["061_vorsteuer"], kz083_vorsteuer: kz["083_vorsteuer"],
       kz065_vorsteuer: kz["065_vorsteuer"], kz066_vorsteuer: kz["066_vorsteuer"],
@@ -339,19 +298,15 @@ serve(async (req) => {
       kz089_vorsteuer: kz["089_vorsteuer"], kz064_vorsteuer: kz["064_vorsteuer"],
       kz062_vorsteuer: kz["062_vorsteuer"], kz063_vorsteuer: kz["063_vorsteuer"],
       kz067_vorsteuer: kz["067_vorsteuer"],
-      // Abschnitt 7
       kz090_betrag: kz["090_betrag"],
-      // Ergebnis
       kz095_betrag: kz095,
       zahllast: zahllast,
       due_date: dueDate,
-      // Legacy fields
       kz000_netto: kz["022_netto"], kz000_ust: kz["022_ust"],
       kz001_netto: kz["029_netto"], kz001_ust: kz["029_ust"],
       kz021_netto: 0, kz021_ust: 0,
     };
 
-    // Check if period exists → update or insert
     const { data: existing } = await supabase
       .from("uva_periods")
       .select("id")
@@ -400,7 +355,7 @@ serve(async (req) => {
     });
   } catch (e) {
     console.error("Calculate UVA error:", e);
-    return new Response(JSON.stringify({ error: e instanceof Error ? e.message : "Unknown error" }), {
+    return new Response(JSON.stringify({ error: "UVA-Berechnung fehlgeschlagen. Bitte versuchen Sie es erneut." }), {
       status: 500,
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
