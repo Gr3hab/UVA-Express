@@ -6,6 +6,20 @@ const corsHeaders = {
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version",
 };
 
+function validateExportInput(body: unknown): { year: number; month: number; steuernummer: string } {
+  if (!body || typeof body !== "object") throw new Error("INVALID_INPUT");
+  const { year, month, steuernummer } = body as Record<string, unknown>;
+  if (typeof year !== "number" || !Number.isInteger(year) || year < 2000 || year > 2100) throw new Error("INVALID_INPUT");
+  if (typeof month !== "number" || !Number.isInteger(month) || month < 1 || month > 12) throw new Error("INVALID_INPUT");
+  // Steuernummer: optional, but if provided must be alphanumeric with / and max 20 chars
+  let cleanSteuernummer = "000/0000";
+  if (steuernummer !== undefined && steuernummer !== null) {
+    if (typeof steuernummer !== "string" || steuernummer.length > 20) throw new Error("INVALID_INPUT");
+    cleanSteuernummer = steuernummer.replace(/[^a-zA-Z0-9\/\-]/g, "").substring(0, 20) || "000/0000";
+  }
+  return { year, month, steuernummer: cleanSteuernummer };
+}
+
 function formatAmount(val: number | null): string {
   return (val || 0).toFixed(2);
 }
@@ -101,7 +115,11 @@ serve(async (req) => {
 
   try {
     const authHeader = req.headers.get("Authorization");
-    if (!authHeader) throw new Error("No authorization header");
+    if (!authHeader) {
+      return new Response(JSON.stringify({ error: "Nicht autorisiert" }), {
+        status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
 
     const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
     const supabaseKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
@@ -112,10 +130,23 @@ serve(async (req) => {
       global: { headers: { Authorization: authHeader } },
     });
     const { data: { user }, error: userError } = await userClient.auth.getUser();
-    if (userError || !user) throw new Error("Unauthorized");
+    if (userError || !user) {
+      return new Response(JSON.stringify({ error: "Nicht autorisiert" }), {
+        status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
 
-    const { year, month, steuernummer } = await req.json();
-    if (!year || !month) throw new Error("year and month are required");
+    let year: number, month: number, steuernummer: string;
+    try {
+      const parsed = validateExportInput(await req.json());
+      year = parsed.year;
+      month = parsed.month;
+      steuernummer = parsed.steuernummer;
+    } catch {
+      return new Response(JSON.stringify({ error: "Ungültige Eingabedaten" }), {
+        status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
 
     const { data: uva, error: uvaError } = await supabase
       .from("uva_periods")
@@ -126,9 +157,13 @@ serve(async (req) => {
       .maybeSingle();
 
     if (uvaError) throw uvaError;
-    if (!uva) throw new Error("Keine UVA für diesen Zeitraum gefunden. Bitte zuerst berechnen.");
+    if (!uva) {
+      return new Response(JSON.stringify({ error: "Keine UVA für diesen Zeitraum gefunden. Bitte zuerst berechnen." }), {
+        status: 404, headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
 
-    const xml = buildUvaXml(uva, steuernummer || "000/0000", `${year}-${String(month).padStart(2, "0")}`);
+    const xml = buildUvaXml(uva, steuernummer, `${year}-${String(month).padStart(2, "0")}`);
 
     return new Response(xml, {
       headers: {
@@ -139,7 +174,7 @@ serve(async (req) => {
     });
   } catch (e) {
     console.error("Export UVA XML error:", e);
-    return new Response(JSON.stringify({ error: e instanceof Error ? e.message : "Unknown error" }), {
+    return new Response(JSON.stringify({ error: "XML-Export fehlgeschlagen. Bitte versuchen Sie es erneut." }), {
       status: 500,
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
