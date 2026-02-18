@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { Sidebar } from "@/components/Sidebar";
 import { Button } from "@/components/ui/button";
@@ -12,6 +12,14 @@ import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
 import type { Invoice, InvoiceType, TaxTreatment } from "@/types/invoice";
 import { toast } from "sonner";
+
+const AUSTRIAN_VAT_RATES = [
+  { value: 0, label: "0% – Steuerfrei" },
+  { value: 6, label: "6% – Ermäßigter Satz" },
+  { value: 10, label: "10% – Ermäßigter Satz" },
+  { value: 13, label: "13% – Ermäßigter Satz" },
+  { value: 20, label: "20% – Normalsatz" },
+];
 
 const INVOICE_TYPES: { value: InvoiceType; label: string }[] = [
   { value: "eingang", label: "Eingangsrechnung" },
@@ -38,6 +46,13 @@ const TAX_TREATMENTS: { value: TaxTreatment; label: string }[] = [
   { value: "steuerbefreit_sonstige", label: "Steuerfrei (Sonstige)" },
 ];
 
+interface FormState extends Partial<Invoice> {
+  net_amount?: number | null;
+  vat_rate?: number | null;
+  vat_amount?: number | null;
+  gross_amount?: number | null;
+}
+
 const InvoiceDetail = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
@@ -45,8 +60,9 @@ const InvoiceDetail = () => {
   const [invoice, setInvoice] = useState<Invoice | null>(null);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
-  const [formData, setFormData] = useState<Partial<Invoice>>({});
+  const [formData, setFormData] = useState<FormState>({});
   const [validationErrors, setValidationErrors] = useState<string[]>([]);
+  const [editField, setEditField] = useState<string | null>(null);
 
   useEffect(() => {
     if (!authLoading && !user) {
@@ -85,6 +101,35 @@ const InvoiceDetail = () => {
     fetchInvoice();
   }, [id, user, authLoading, navigate]);
 
+  const calculateAmounts = useMemo(() => {
+    return (state: FormState) => {
+      const net = state.net_amount ?? 0;
+      const vat = state.vat_rate ?? 0;
+      const vatAmount = state.vat_amount ?? 0;
+      const gross = state.gross_amount ?? 0;
+
+      // Determine which field was edited by comparing with original
+      const edited = editField;
+
+      let result: FormState = { ...state };
+
+      if (edited === "net_amount") {
+        result.vat_amount = Math.round(net * (vat / 100) * 100) / 100;
+        result.gross_amount = net + (result.vat_amount ?? 0);
+      } else if (edited === "vat_rate") {
+        result.vat_amount = Math.round(net * (vat / 100) * 100) / 100;
+        result.gross_amount = net + (result.vat_amount ?? 0);
+      } else if (edited === "vat_amount") {
+        result.gross_amount = net + vatAmount;
+      } else if (edited === "gross_amount") {
+        result.net_amount = Math.round((gross / (1 + vat / 100)) * 100) / 100;
+        result.vat_amount = gross - (result.net_amount ?? 0);
+      }
+
+      return result;
+    };
+  }, [editField]);
+
   const validatePflichtangaben = (): string[] => {
     const errors: string[] = [];
     const required = [
@@ -96,7 +141,7 @@ const InvoiceDetail = () => {
     ];
 
     for (const { field, label } of required) {
-      const value = formData[field as keyof Invoice];
+      const value = formData[field as keyof FormState];
       if (value === null || value === undefined || value === "") {
         errors.push(`${label} ist erforderlich (§11 UStG)`);
       }
@@ -105,8 +150,11 @@ const InvoiceDetail = () => {
     return errors;
   };
 
-  const handleInputChange = (field: keyof Invoice, value: any) => {
-    setFormData(prev => ({ ...prev, [field]: value }));
+  const handleInputChange = (field: string, value: any) => {
+    setEditField(field);
+    const newFormData: FormState = { ...formData, [field]: value };
+    const updated = calculateAmounts(newFormData);
+    setFormData(updated);
     setValidationErrors([]);
   };
 
@@ -281,21 +329,29 @@ const InvoiceDetail = () => {
                       id="net_amount"
                       type="number"
                       step="0.01"
-                      value={formData.net_amount || ""}
-                      onChange={(e) => handleInputChange("net_amount", parseFloat(e.target.value) || null)}
+                      value={formData.net_amount === null || formData.net_amount === undefined ? "" : formData.net_amount}
+                      onChange={(e) => handleInputChange("net_amount", e.target.value === "" ? null : parseFloat(e.target.value))}
+                      placeholder="0,00"
                     />
                   </div>
 
                   <div>
-                    <Label htmlFor="vat_rate">USt-Satz (%)</Label>
-                    <Input
-                      id="vat_rate"
-                      type="number"
-                      step="0.01"
-                      value={formData.vat_rate || ""}
-                      onChange={(e) => handleInputChange("vat_rate", parseFloat(e.target.value) || null)}
-                      placeholder="z.B. 20"
-                    />
+                    <Label htmlFor="vat_rate">USt-Satz</Label>
+                    <Select
+                      value={formData.vat_rate !== null && formData.vat_rate !== undefined ? String(formData.vat_rate) : ""}
+                      onValueChange={(value) => handleInputChange("vat_rate", parseFloat(value))}
+                    >
+                      <SelectTrigger id="vat_rate">
+                        <SelectValue placeholder="Wählen Sie einen Satz" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {AUSTRIAN_VAT_RATES.map(rate => (
+                          <SelectItem key={rate.value} value={String(rate.value)}>
+                            {rate.label}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
                   </div>
 
                   <div>
@@ -304,21 +360,28 @@ const InvoiceDetail = () => {
                       id="vat_amount"
                       type="number"
                       step="0.01"
-                      value={formData.vat_amount || ""}
-                      onChange={(e) => handleInputChange("vat_amount", parseFloat(e.target.value) || null)}
+                      value={formData.vat_amount === null || formData.vat_amount === undefined ? "" : formData.vat_amount}
+                      onChange={(e) => handleInputChange("vat_amount", e.target.value === "" ? null : parseFloat(e.target.value))}
+                      placeholder="0,00"
                     />
                   </div>
                 </div>
 
                 <div className="mt-4">
                   <Label htmlFor="gross_amount">Gesamtbetrag (€)</Label>
-                  <Input
-                    id="gross_amount"
-                    type="number"
-                    step="0.01"
-                    value={formData.gross_amount || ""}
-                    onChange={(e) => handleInputChange("gross_amount", parseFloat(e.target.value) || null)}
-                  />
+                  <div className="relative">
+                    <Input
+                      id="gross_amount"
+                      type="number"
+                      step="0.01"
+                      value={formData.gross_amount === null || formData.gross_amount === undefined ? "" : formData.gross_amount}
+                      onChange={(e) => handleInputChange("gross_amount", e.target.value === "" ? null : parseFloat(e.target.value))}
+                      placeholder="0,00"
+                    />
+                    <div className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-muted-foreground">
+                      = {((formData.net_amount || 0) + (formData.vat_amount || 0)).toLocaleString("de-AT", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                    </div>
+                  </div>
                 </div>
               </div>
 
