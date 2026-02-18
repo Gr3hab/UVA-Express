@@ -1,4 +1,5 @@
 import { FileText, CheckCircle2, Clock, AlertCircle, Loader2 } from "lucide-react";
+import { useNavigate } from "react-router-dom";
 import { cn } from "@/lib/utils";
 import type { Invoice } from "@/types/invoice";
 
@@ -15,6 +16,8 @@ interface InvoiceListProps {
 }
 
 export const InvoiceList = ({ invoices, loading }: InvoiceListProps) => {
+  const navigate = useNavigate();
+
   const formatCurrency = (amount: number | null) =>
     amount != null ? `€ ${amount.toLocaleString("de-AT", { minimumFractionDigits: 2 })}` : "–";
 
@@ -50,7 +53,7 @@ export const InvoiceList = ({ invoices, loading }: InvoiceListProps) => {
             const status = statusConfig[invoice.ocr_status] || statusConfig.pending;
             const StatusIcon = status.icon;
             return (
-              <div key={invoice.id} className="flex items-center gap-4 px-5 py-3.5 hover:bg-muted/50 transition-colors cursor-pointer">
+              <div key={invoice.id} className="flex items-center gap-4 px-5 py-3.5 hover:bg-muted/50 transition-colors cursor-pointer" onClick={() => navigate(`/invoice/${invoice.id}`)}>
                 <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-primary/5">
                   <FileText className="h-4 w-4 text-primary" />
                 </div>
