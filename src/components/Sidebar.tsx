@@ -4,11 +4,11 @@ import { useNavigate, useLocation } from "react-router-dom";
 
 const navItems = [
   { icon: LayoutDashboard, label: "Dashboard", path: "/" },
-  { icon: FileText, label: "Rechnungen", path: "/" },
-  { icon: Upload, label: "Upload", path: "/" },
+  { icon: FileText, label: "Rechnungen", path: "/rechnungen" },
+  { icon: Upload, label: "Upload", path: "/rechnungen" },
   { icon: Calculator, label: "UVA", path: "/uva" },
-  { icon: TrendingUp, label: "Berichte", path: "/" },
-  { icon: Settings, label: "Einstellungen", path: "/" },
+  { icon: TrendingUp, label: "Berichte", path: "/berichte" },
+  { icon: Settings, label: "Einstellungen", path: "/einstellungen" },
 ];
 
 interface SidebarProps {
