@@ -5,7 +5,7 @@ import { useNavigate, useLocation } from "react-router-dom";
 const navItems = [
   { icon: LayoutDashboard, label: "Dashboard", path: "/" },
   { icon: FileText, label: "Rechnungen", path: "/rechnungen" },
-  { icon: Upload, label: "Upload", path: "/rechnungen" },
+  { icon: Upload, label: "Rechnungen hochladen", path: "/upload" },
   { icon: Calculator, label: "UVA", path: "/uva" },
   { icon: TrendingUp, label: "Berichte", path: "/berichte" },
   { icon: Settings, label: "Einstellungen", path: "/einstellungen" },

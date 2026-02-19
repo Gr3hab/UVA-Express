@@ -1,12 +1,12 @@
 import { Sidebar } from "@/components/Sidebar";
-import { InvoiceList } from "@/components/InvoiceList";
-import { FileText } from "lucide-react";
+import { UploadZone } from "@/components/UploadZone";
+import { CloudUpload } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import { useInvoices } from "@/hooks/useInvoices";
 
-const Rechnungen = () => {
+const Upload = () => {
   const { user, loading: authLoading, signOut } = useAuth();
-  const { invoices, loading: invoicesLoading } = useInvoices();
+  const { uploadAndScan } = useInvoices();
 
   if (authLoading) {
     return (
@@ -29,11 +29,11 @@ const Rechnungen = () => {
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
               <div className="p-2 rounded-lg bg-accent/10">
-                <FileText className="h-5 w-5 text-accent" />
+                <CloudUpload className="h-5 w-5 text-accent" />
               </div>
               <div>
-                <h1 className="font-display text-xl font-bold text-foreground">Rechnungen</h1>
-                <p className="text-sm text-muted-foreground">Alle erfassten Rechnungen anzeigen und bearbeiten</p>
+                <h1 className="font-display text-xl font-bold text-foreground">Rechnungen hochladen</h1>
+                <p className="text-sm text-muted-foreground">Neue Rechnungen mit OCR erfassen</p>
               </div>
             </div>
             <div className="h-8 w-8 rounded-full gradient-primary flex items-center justify-center text-xs font-bold text-primary-foreground">
@@ -42,12 +42,12 @@ const Rechnungen = () => {
           </div>
         </header>
 
-        <div className="p-8 max-w-7xl">
-          <InvoiceList invoices={invoices} loading={invoicesLoading} />
+        <div className="p-8 max-w-3xl">
+          <UploadZone onUpload={uploadAndScan} />
         </div>
       </main>
     </div>
   );
 };
 
-export default Rechnungen;
+export default Upload;

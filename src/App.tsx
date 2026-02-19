@@ -7,6 +7,7 @@ import { ErrorBoundary } from "@/components/ErrorBoundary";
 import Index from "./pages/Index";
 import Auth from "./pages/Auth";
 import Rechnungen from "./pages/Rechnungen";
+import Upload from "./pages/Upload";
 import UVA from "./pages/UVA";
 import InvoiceDetail from "./pages/InvoiceDetail";
 import Berichte from "./pages/Berichte";
@@ -28,6 +29,7 @@ const App = () => (
             <Route path="/" element={<Index />} />
             <Route path="/auth" element={<Auth />} />
             <Route path="/rechnungen" element={<Rechnungen />} />
+            <Route path="/upload" element={<Upload />} />
             <Route path="/uva" element={<UVA />} />
             <Route path="/invoice/:id" element={<InvoiceDetail />} />
             <Route path="/berichte" element={<Berichte />} />

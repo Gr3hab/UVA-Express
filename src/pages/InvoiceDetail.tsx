@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo } from "react";
+import { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { Sidebar } from "@/components/Sidebar";
 import { Button } from "@/components/ui/button";
@@ -14,10 +14,11 @@ import type { Invoice, InvoiceType, TaxTreatment } from "@/types/invoice";
 import { toast } from "sonner";
 
 const AUSTRIAN_VAT_RATES = [
-  { value: 0, label: "0% – Steuerfrei" },
-  { value: 6, label: "6% – Ermäßigter Satz" },
-  { value: 10, label: "10% – Ermäßigter Satz" },
-  { value: 13, label: "13% – Ermäßigter Satz" },
+  { value: 0, label: "0% – Steuerfrei/Nullsatz (§ 6 Abs. 1 Z 1 iVm § 7-8, Photovoltaik, etc.)" },
+  { value: 6, label: "6% – Ermäßigter Satz I" },
+  { value: 10, label: "10% – Ermäßigter Satz II" },
+  { value: 13, label: "13% – Ermäßigter Satz III" },
+  { value: 19, label: "19% – Jungholz und Mittelberg" },
   { value: 20, label: "20% – Normalsatz" },
 ];
 
@@ -101,34 +102,32 @@ const InvoiceDetail = () => {
     fetchInvoice();
   }, [id, user, authLoading, navigate]);
 
-  const calculateAmounts = useMemo(() => {
-    return (state: FormState) => {
-      const net = state.net_amount ?? 0;
-      const vat = state.vat_rate ?? 0;
-      const vatAmount = state.vat_amount ?? 0;
-      const gross = state.gross_amount ?? 0;
+  const handleInputChange = (field: string, value: any) => {
+    const newFormData: FormState = { ...formData, [field]: value };
 
-      // Determine which field was edited by comparing with original
-      const edited = editField;
+    const net = newFormData.net_amount ?? 0;
+    const vat = newFormData.vat_rate ?? 0;
+    const vatAmount = newFormData.vat_amount ?? 0;
+    const gross = newFormData.gross_amount ?? 0;
 
-      let result: FormState = { ...state };
+    let updated: FormState = { ...newFormData };
 
-      if (edited === "net_amount") {
-        result.vat_amount = Math.round(net * (vat / 100) * 100) / 100;
-        result.gross_amount = net + (result.vat_amount ?? 0);
-      } else if (edited === "vat_rate") {
-        result.vat_amount = Math.round(net * (vat / 100) * 100) / 100;
-        result.gross_amount = net + (result.vat_amount ?? 0);
-      } else if (edited === "vat_amount") {
-        result.gross_amount = net + vatAmount;
-      } else if (edited === "gross_amount") {
-        result.net_amount = Math.round((gross / (1 + vat / 100)) * 100) / 100;
-        result.vat_amount = gross - (result.net_amount ?? 0);
-      }
+    if (field === "net_amount") {
+      updated.vat_amount = Math.round(net * (vat / 100) * 100) / 100;
+      updated.gross_amount = Math.round((net + (updated.vat_amount ?? 0)) * 100) / 100;
+    } else if (field === "vat_rate") {
+      updated.vat_amount = Math.round(net * (vat / 100) * 100) / 100;
+      updated.gross_amount = Math.round((net + (updated.vat_amount ?? 0)) * 100) / 100;
+    } else if (field === "vat_amount") {
+      updated.gross_amount = Math.round((net + vatAmount) * 100) / 100;
+    } else if (field === "gross_amount") {
+      updated.net_amount = Math.round((gross / (1 + vat / 100)) * 100) / 100;
+      updated.vat_amount = Math.round((gross - (updated.net_amount ?? 0)) * 100) / 100;
+    }
 
-      return result;
-    };
-  }, [editField]);
+    setFormData(updated);
+    setValidationErrors([]);
+  };
 
   const validatePflichtangaben = (): string[] => {
     const errors: string[] = [];
@@ -148,14 +147,6 @@ const InvoiceDetail = () => {
     }
 
     return errors;
-  };
-
-  const handleInputChange = (field: string, value: any) => {
-    setEditField(field);
-    const newFormData: FormState = { ...formData, [field]: value };
-    const updated = calculateAmounts(newFormData);
-    setFormData(updated);
-    setValidationErrors([]);
   };
 
   const handleSave = async () => {
