@@ -563,11 +563,11 @@ const UVA = () => {
                       <h3 className="font-display font-semibold text-card-foreground">2. Steuerfreie Umsätze MIT Vorsteuerabzug</h3>
                     </div>
                     <ColumnHeaders showNetto ustLabel="Bemessung" />
-                    <KZLine kz="011" label="Ausfuhrlieferungen" tooltip="§ 6 Abs 1 Z 1 iVm § 7 UStG" netto={n(p.kz011_netto)} showUst={false} />
-                    <KZLine kz="012" label="Lohnveredelung" tooltip="§ 6 Abs 1 Z 1 iVm § 8 UStG" netto={n(p.kz012_netto)} showUst={false} />
-                    <KZLine kz="015" label="Innergemeinschaftliche Lieferungen" tooltip="Art. 6 Abs 1 BMR" netto={n(p.kz015_netto)} showUst={false} />
-                    <KZLine kz="017" label="Dreiecksgeschäfte (Art. 25 Abs 2)" tooltip="Lieferungen nach Art. 25 Abs 2" netto={n(p.kz017_netto)} showUst={false} />
-                    <KZLine kz="018" label="Fahrzeuglieferungen (Abnehmer ohne UID)" tooltip="Art. 1 Abs 8, Art. 6 Abs 1 BMR" netto={n(p.kz018_netto)} showUst={false} />
+                    <KZLine kz="011" label="Ausfuhrlieferungen" tooltip="§ 6 Abs 1 Z 1 iVm § 7 UStG" netto={kzVal("kz011_netto")} showUst={false} />
+                    <KZLine kz="012" label="Lohnveredelung" tooltip="§ 6 Abs 1 Z 1 iVm § 8 UStG" netto={kzVal("kz012_netto")} showUst={false} />
+                    <KZLine kz="015" label="Innergemeinschaftliche Lieferungen" tooltip="Art. 6 Abs 1 BMR" netto={kzVal("kz015_netto")} showUst={false} />
+                    <KZLine kz="017" label="Dreiecksgeschäfte (Art. 25 Abs 2)" tooltip="Lieferungen nach Art. 25 Abs 2" netto={kzVal("kz017_netto")} showUst={false} />
+                    <KZLine kz="018" label="Fahrzeuglieferungen (Abnehmer ohne UID)" tooltip="Art. 1 Abs 8, Art. 6 Abs 1 BMR" netto={kzVal("kz018_netto")} showUst={false} />
                   </div>
 
                   {/* Abschnitt 3: Steuerfreie OHNE Vorsteuerabzug */}
