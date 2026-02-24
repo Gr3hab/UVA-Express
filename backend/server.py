@@ -307,7 +307,7 @@ async def api_export_xml_json(request_body: XMLExportRequest, request: Request):
     try:
         result = build_uva_xml(request_body)
         return result
-    except Exception as e:
+    except Exception:
         raise HTTPException(status_code=500, detail="XML-Export fehlgeschlagen.")
 
 
@@ -332,7 +332,7 @@ async def api_validate_rksv(request_body: RKSVValidationRequest, request: Reques
             },
         )
         return result
-    except Exception as e:
+    except Exception:
         raise HTTPException(status_code=500, detail="RKSV-Validierung fehlgeschlagen.")
 
 
