@@ -576,9 +576,9 @@ const UVA = () => {
                       <h3 className="font-display font-semibold text-card-foreground">3. Steuerfreie Umsätze OHNE Vorsteuerabzug</h3>
                     </div>
                     <ColumnHeaders showNetto ustLabel="Bemessung" />
-                    <KZLine kz="019" label="Grundstücksumsätze" tooltip="§ 6 Abs 1 Z 9 lit a UStG" netto={n(p.kz019_netto)} showUst={false} />
-                    <KZLine kz="016" label="Kleinunternehmer" tooltip="§ 6 Abs 1 Z 27 UStG" netto={n(p.kz016_netto)} showUst={false} />
-                    <KZLine kz="020" label="Übrige steuerfreie Umsätze" netto={n(p.kz020_netto)} showUst={false} />
+                    <KZLine kz="019" label="Grundstücksumsätze" tooltip="§ 6 Abs 1 Z 9 lit a UStG" netto={kzVal("kz019_netto")} showUst={false} />
+                    <KZLine kz="016" label="Kleinunternehmer" tooltip="§ 6 Abs 1 Z 27 UStG" netto={kzVal("kz016_netto")} showUst={false} />
+                    <KZLine kz="020" label="Übrige steuerfreie Umsätze" netto={kzVal("kz020_netto")} showUst={false} />
                   </div>
 
                   {/* Abschnitt 4: Weiters zu versteuern */}
