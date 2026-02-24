@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import {
   CheckCircle2, XCircle, AlertTriangle, Info, FileText,
-  ArrowRight, Loader2, Send, Download, Eye, Shield
+  ArrowRight, Loader2, Send, Download, Eye, Shield, AlertOctagon
 } from "lucide-react";
 import type { SubmissionPrepareResult, SubmissionChecklistItem } from "@/hooks/useUVAEngine";
 
@@ -16,6 +16,8 @@ interface SubmissionPipelineProps {
   month: number;
   xmlPreview?: string | null;
 }
+
+const V1_DISCLAIMER = "V1/Pilotbetrieb – Automatisierte Vorverarbeitung. Prüfung und Freigabe durch den Nutzer ist Pflicht. Keine Steuerberatung.";
 
 const STATUS_LABELS: Record<string, { label: string; color: string }> = {
   entwurf: { label: "Entwurf", color: "bg-gray-100 text-gray-700 border-gray-200" },
