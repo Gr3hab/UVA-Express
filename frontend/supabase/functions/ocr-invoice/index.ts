@@ -194,8 +194,7 @@ Gib ein confidence-Feld (0-100) an.`,
     });
 
     if (!aiResponse.ok) {
-      const errText = await aiResponse.text();
-      console.error("AI error:", aiResponse.status, errText);
+      console.error("AI processing failed with status:", aiResponse.status);
       
       if (aiResponse.status === 429) {
         await supabase.from("invoices").update({ ocr_status: "error" }).eq("id", invoiceId).eq("user_id", user.id);
