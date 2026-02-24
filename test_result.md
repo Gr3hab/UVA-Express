@@ -195,6 +195,81 @@ backend:
           agent: "testing"
           comment: "✅ PASSED - KZ reference data endpoint returns 44 complete KZ entries with proper structure (kz, label, section fields). All essential codes present: KZ000, KZ022, KZ029, KZ070, KZ090, KZ095. Data structure validated and complete."
 
+  - task: "Idempotency System (Hardening V1.1)"
+    implemented: true
+    working: true
+    file: "backend/server.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+        - working: "NA"
+          agent: "main"
+          comment: "Implemented submission idempotency with idempotency_key parameter, duplicate detection, and status lock to prevent double processing. In-memory store with 10,000 entry capacity."
+        - working: true
+          agent: "testing"
+          comment: "✅ PASSED - Idempotency system working correctly: First submission with unique key returns was_duplicate=false, duplicate submission with same key returns was_duplicate=true (idempotent!), different key with same period works as new submission. All three test scenarios passed."
+
+  - task: "XSD Validation System (Hardening V1.1)" 
+    implemented: true
+    working: true
+    file: "backend/uva_xml.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+        - working: "NA"
+          agent: "main"
+          comment: "Implemented XSD schema validation for XML export with structured validation_issues reporting, validation_passed flag, and detailed error messages."
+        - working: true
+          agent: "testing"
+          comment: "✅ PASSED - XSD validation working: Valid data passes with validation_passed=true, short Steuernummer triggers validation warnings as expected. Both /api/uva/export-xml-json and prepare endpoint include XSD validation checks."
+
+  - task: "Audit Trail System (Hardening V1.1)"
+    implemented: true
+    working: true
+    file: "backend/audit.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+        - working: "NA"
+          agent: "main"
+          comment: "Implemented structured audit logging with correlation IDs, payload hashes (no PII), action tracking, and GET /api/audit/recent endpoint for monitoring. In-memory ring buffer with 1000 entry capacity."
+        - working: true
+          agent: "testing"
+          comment: "✅ PASSED - Audit trail working: GET /api/audit/recent returns proper structure with correlation_id, timestamp, action fields. No PII in logs (payload hashes only). Audit entries created for all major actions (calculate, validate, export, submission)."
+
+  - task: "Metrics & Structured Logging (Hardening V1.1)"
+    implemented: true
+    working: true
+    file: "backend/middleware.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+        - working: "NA"
+          agent: "main"
+          comment: "Implemented request correlation middleware, structured JSON logging, and GET /api/metrics endpoint with per-endpoint statistics (count, avg_ms, error_rate)."
+        - working: true
+          agent: "testing"
+          comment: "✅ PASSED - Metrics system working: /api/metrics returns endpoint statistics with counts, average response times, error rates. Request accumulation working correctly across all test requests. Structured logging with JSON format confirmed."
+
+  - task: "Version & Hardening Verification (V1.1)"
+    implemented: true
+    working: true
+    file: "backend/server.py"
+    stuck_count: 0
+    priority: "medium"
+    needs_retesting: false
+    status_history:
+        - working: "NA"
+          agent: "main"
+          comment: "Updated API version to 1.1.0 with hardened=true flag and hardening features list (idempotency, audit-trail, xsd-validation)."
+        - working: true
+          agent: "testing"
+          comment: "✅ PASSED - Version check confirmed: API returns version 1.1.0, hardened=true, and includes all hardening features in the features array."
+
 metadata:
   created_by: "main_agent"
   version: "2.1"
