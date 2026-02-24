@@ -434,7 +434,7 @@ const UVA = () => {
             </div>
           )}
 
-          {!currentPeriod ? (
+          {!hasData ? (
             <div className="rounded-xl bg-card card-shadow p-12 text-center">
               <FileText className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
               <h3 className="font-display text-lg font-semibold text-card-foreground mb-2">Keine UVA für {MONTHS[selectedMonth]} {selectedYear}</h3>
@@ -463,13 +463,13 @@ const UVA = () => {
                   </div>
                 </div>
                 <div className="rounded-xl bg-card card-shadow p-4 flex items-center gap-3">
-                  <div className={cn("flex h-10 w-10 items-center justify-center rounded-lg", n(p.kz095_betrag) >= 0 ? "bg-destructive/10" : "bg-success/10")}>
-                    <Receipt className={cn("h-5 w-5", n(p.kz095_betrag) >= 0 ? "text-destructive" : "text-success")} />
+                  <div className={cn("flex h-10 w-10 items-center justify-center rounded-lg", kz095 >= 0 ? "bg-destructive/10" : "bg-success/10")}>
+                    <Receipt className={cn("h-5 w-5", kz095 >= 0 ? "text-destructive" : "text-success")} />
                   </div>
                   <div>
-                    <p className="text-xs text-muted-foreground">{n(p.kz095_betrag) >= 0 ? "Zahllast" : "Gutschrift"}</p>
-                    <p className={cn("font-display font-bold", n(p.kz095_betrag) >= 0 ? "text-destructive" : "text-success")}>
-                      {fmt(Math.abs(n(p.kz095_betrag)))}
+                    <p className="text-xs text-muted-foreground">{kz095 >= 0 ? "Zahllast" : "Gutschrift"}</p>
+                    <p className={cn("font-display font-bold", kz095 >= 0 ? "text-destructive" : "text-success")}>
+                      {fmt(Math.abs(kz095))}
                     </p>
                   </div>
                 </div>
@@ -480,11 +480,62 @@ const UVA = () => {
                   <div>
                     <p className="text-xs text-muted-foreground">Fällig am</p>
                     <p className="font-display font-bold text-card-foreground">
-                      {p.due_date ? new Date(p.due_date).toLocaleDateString("de-AT", { day: "2-digit", month: "2-digit", year: "numeric" }) : "–"}
+                      {dueDate ? new Date(dueDate).toLocaleDateString("de-AT", { day: "2-digit", month: "2-digit", year: "numeric" }) : "–"}
                     </p>
                   </div>
                 </div>
               </div>
+
+              {/* Engine Processing Details */}
+              {engine.calculationResult?.warnings && engine.calculationResult.warnings.length > 0 && activeTab === "formular" && (
+                <div className="rounded-xl bg-amber-50 border border-amber-200 p-4">
+                  <h4 className="text-sm font-semibold text-amber-800 mb-2 flex items-center gap-2">
+                    <AlertTriangle className="h-4 w-4" />
+                    Hinweise aus der Engine ({engine.calculationResult.warnings.length})
+                  </h4>
+                  <div className="space-y-1">
+                    {engine.calculationResult.warnings.slice(0, 5).map((w, idx) => (
+                      <p key={idx} className="text-xs text-amber-700">{w.message}</p>
+                    ))}
+                    {engine.calculationResult.warnings.length > 5 && (
+                      <p className="text-xs text-amber-600 font-medium">
+                        ... und {engine.calculationResult.warnings.length - 5} weitere
+                      </p>
+                    )}
+                  </div>
+                </div>
+              )}
+
+              {/* Tab Content */}
+              {activeTab === "validierung" && (
+                <div className="space-y-6">
+                  <UVAValidationResults result={engine.validationResult} />
+                  {!engine.validationResult && (
+                    <div className="rounded-xl bg-card card-shadow p-8 text-center">
+                      <Shield className="h-10 w-10 text-muted-foreground mx-auto mb-3" />
+                      <p className="text-sm text-muted-foreground">
+                        Klicke oben auf "BMF-Prüfung" um die Validierung zu starten.
+                      </p>
+                    </div>
+                  )}
+                </div>
+              )}
+
+              {activeTab === "einreichung" && (
+                <SubmissionPipeline
+                  result={engine.submissionResult}
+                  onPrepare={handlePrepareSubmission}
+                  onExportXML={handleExport}
+                  onConfirm={handleConfirmSubmission}
+                  onPreviewXML={handlePreviewXML}
+                  loading={engine.loading}
+                  year={selectedYear}
+                  month={selectedMonth + 1}
+                  xmlPreview={xmlPreview}
+                />
+              )}
+
+              {activeTab === "formular" && (
 
               {/* Full U30 Form */}
               <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
