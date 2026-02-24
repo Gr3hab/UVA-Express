@@ -3,7 +3,6 @@ import { Sidebar } from "@/components/Sidebar";
 import { useAuth } from "@/hooks/useAuth";
 import { useUVA, UVAPeriodData } from "@/hooks/useUVA";
 import { useUVAEngine } from "@/hooks/useUVAEngine";
-import type { InvoiceForEngine, UVACalculationResult, UVAValidationResult, SubmissionPrepareResult } from "@/hooks/useUVAEngine";
 import { useState, useMemo, useCallback } from "react";
 import { Calculator, Download, RefreshCw, ChevronLeft, ChevronRight, FileText, AlertTriangle, CheckCircle2, Info, TrendingUp, TrendingDown, Receipt, ShieldCheck, Shield, ClipboardCheck, Eye } from "lucide-react";
 import { Button } from "@/components/ui/button";
