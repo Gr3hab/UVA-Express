@@ -221,9 +221,24 @@ agent_communication:
       message: "Frontend integration complete. UVA page now has 3 tabs (Formular/Validierung/Einreichung), uses FastAPI backend engine. New components: SubmissionPipeline, UVAValidationResults, RKSVFields, useUVAEngine hook."
 
 frontend:
+  - task: "Authentication Page"
+    implemented: true
+    working: true
+    file: "frontend/src/pages/Auth.tsx"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+        - working: "NA"
+          agent: "main"
+          comment: "Supabase auth page with email/password fields, login and register functionality"
+        - working: true
+          agent: "testing"
+          comment: "✅ PASSED - Auth page fully functional: Email/password fields present, Anmelden and Registrieren buttons working, form toggle (Login ↔ Register) working, error handling displays 'Invalid login credentials' correctly, UVA Express branding displayed, Impressum and Datenschutz links working, responsive design verified (desktop and mobile), auth redirect working (/uva redirects to auth when not logged in). Screenshots captured: auth_page.png, registration_form.png, auth_with_error.png, impressum_page.png, datenschutz_page.png, auth_mobile.png"
+
   - task: "UVA Engine Integration (Tab: UVA-Formular)"
     implemented: true
-    working: "NA"
+    working: "untested_auth_required"
     file: "frontend/src/pages/UVA.tsx, frontend/src/hooks/useUVAEngine.ts"
     stuck_count: 0
     priority: "high"
@@ -232,10 +247,13 @@ frontend:
         - working: "NA"
           agent: "main"
           comment: "UVA page integrated with FastAPI backend. Calculation button triggers backend engine. KZ values display from engine results. Summary cards show totals. Engine processing details shown as warnings."
+        - working: "untested_auth_required"
+          agent: "testing"
+          comment: "⚠️ CANNOT TEST - Requires valid Supabase credentials. Auth page correctly redirects to login when accessing /uva without authentication. Backend API integration verified separately (all APIs passing). Code structure reviewed - integration looks correct with proper API calls to backend engine."
 
   - task: "BMF Validierung Tab"
     implemented: true
-    working: "NA"
+    working: "untested_auth_required"
     file: "frontend/src/components/UVAValidationResults.tsx"
     stuck_count: 0
     priority: "high"
@@ -244,10 +262,13 @@ frontend:
         - working: "NA"
           agent: "main"
           comment: "Validation tab shows errors/warnings/infos with color-coded severity. KZ095 consistency check displayed. BMF plausibility pass/fail indicator."
+        - working: "untested_auth_required"
+          agent: "testing"
+          comment: "⚠️ CANNOT TEST - Requires valid Supabase credentials. Backend validation API tested separately and working correctly. Code structure reviewed."
 
   - task: "Einreichungspipeline Tab"
     implemented: true
-    working: "NA"
+    working: "untested_auth_required"
     file: "frontend/src/components/SubmissionPipeline.tsx"
     stuck_count: 0
     priority: "high"
@@ -256,10 +277,13 @@ frontend:
         - working: "NA"
           agent: "main"
           comment: "Submission pipeline with status timeline, checklist, XML preview modal, download button, manual confirmation dialog with FinanzOnline reference input."
+        - working: "untested_auth_required"
+          agent: "testing"
+          comment: "⚠️ CANNOT TEST - Requires valid Supabase credentials. Backend submission APIs tested separately and working correctly. Code structure reviewed."
 
   - task: "Tab Navigation"
     implemented: true
-    working: "NA"
+    working: "untested_auth_required"
     file: "frontend/src/pages/UVA.tsx"
     stuck_count: 0
     priority: "high"
@@ -268,5 +292,8 @@ frontend:
         - working: "NA"
           agent: "main"
           comment: "3 tabs: UVA-Formular, Validierung, Einreichung. Active tab highlighted with background. Validation tab shows green/red dot indicator."
+        - working: "untested_auth_required"
+          agent: "testing"
+          comment: "⚠️ CANNOT TEST - Requires valid Supabase credentials. Code structure reviewed - tab implementation looks correct with proper state management."
     - agent: "testing"
       message: "✅ COMPREHENSIVE BACKEND TESTING COMPLETED - All 6 backend tasks tested and PASSING. Created backend_test.py with 13 test cases covering: UVA calculation with realistic Austrian tax scenarios (all rates, treatments), BMF validation with error detection, XML export (both endpoints), RKSV validation with edge cases, complete submission pipeline, KZ reference data, and edge cases (empty UVA, zero/negative amounts). 100% success rate. Backend is production-ready for Go-live V1."
