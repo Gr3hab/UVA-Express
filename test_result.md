@@ -107,75 +107,93 @@ user_problem_statement: "Go-live: 100% automatische UVA-Engine, RKSV-Validierung
 backend:
   - task: "UVA Calculation Engine"
     implemented: true
-    working: "NA"
+    working: true
     file: "backend/uva_engine.py"
     stuck_count: 0
     priority: "high"
-    needs_retesting: true
+    needs_retesting: false
     status_history:
         - working: "NA"
           agent: "main"
           comment: "Implemented complete UVA calculation engine with all KZ codes from U30 2026 form. Handles: normal 20%/10%/13%/19%/7%, exports, IG Lieferung, IG Erwerb, all Reverse Charge variants, Einfuhr, Grundstück, Kleinunternehmer. POST /api/uva/calculate"
+        - working: true
+          agent: "testing"
+          comment: "✅ PASSED - Comprehensive testing with realistic Austrian tax data: Normal 20%/10%/13% rates, IG Erwerb, Reverse Charge (§19 Abs1, Bauleistungen), Exports, IG Lieferung, Grundstück, Kleinunternehmer. All KZ codes correctly calculated: KZ000 (Ausgang only), KZ070 (IG Erwerb sum), RC symmetry verified (KZ057=KZ066, KZ048=KZ082). Edge cases tested: empty invoices (Leermeldung), zero amounts, negative amounts. Summary counts accurate."
 
   - task: "UVA BMF Validation"
     implemented: true
-    working: "NA"
+    working: true
     file: "backend/uva_validator.py"
     stuck_count: 0
     priority: "high"
-    needs_retesting: true
+    needs_retesting: false
     status_history:
         - working: "NA"
           agent: "main"
           comment: "BMF plausibility checks: rate consistency, KZ095 recalculation, RC symmetry, IG symmetry, negative amounts, empty UVA, duplicate invoices, period checks. POST /api/uva/validate"
+        - working: true
+          agent: "testing"
+          comment: "✅ PASSED - Validation engine correctly validates calculated KZ values. KZ095 consistency check working. Successfully detects intentional errors (wrong KZ095 values). All BMF plausibility rules functioning correctly."
 
   - task: "BMF XML Export"
     implemented: true
-    working: "NA"
+    working: true
     file: "backend/uva_xml.py"
     stuck_count: 0
     priority: "high"
-    needs_retesting: true
+    needs_retesting: false
     status_history:
         - working: "NA"
           agent: "main"
           comment: "BMF-compliant ERKLAERUNGENPAKET XML with all KZ codes, proper XML escaping, zero-value filtering. POST /api/uva/export-xml and /api/uva/export-xml-json"
+        - working: true
+          agent: "testing"
+          comment: "✅ PASSED - XML export generates BMF-compliant structure: ERKLAERUNGENPAKET root, ERKLAERUNG art='U30', KENNZAHLEN section with 21 KZ values. Both download (/api/uva/export-xml) and JSON (/api/uva/export-xml-json) endpoints working. Minor: Steuernummer formatting could be improved but XML structure is valid."
 
   - task: "RKSV Validation"
     implemented: true
-    working: "NA"
+    working: true
     file: "backend/rksv_validator.py"
     stuck_count: 0
     priority: "high"
-    needs_retesting: true
+    needs_retesting: false
     status_history:
         - working: "NA"
           agent: "main"
           comment: "RKSV V1: Kassen-ID format, Belegnummer format, QR-data structure validation, duplicate check, plausibility checks. POST /api/rksv/validate"
+        - working: true
+          agent: "testing"
+          comment: "✅ PASSED - RKSV validation detects format errors, duplicates, and QR-data issues. Tested with 7 receipts (4 valid, 3 invalid). Correctly identifies: invalid Kassen-ID, oversized Belegnummer, duplicate receipts, missing/invalid QR-data. Error detection working as expected."
 
   - task: "Submission Pipeline"
     implemented: true
-    working: "NA"
+    working: true
     file: "backend/server.py"
     stuck_count: 0
     priority: "high"
-    needs_retesting: true
+    needs_retesting: false
     status_history:
         - working: "NA"
           agent: "main"
           comment: "Submission preparation with checklist (Steuernummer, BMF validation, KZ095 consistency, XML generation, period check). Status workflow: Entwurf→Berechnet→Validiert→Freigegeben→Eingereicht→Bestätigt. POST /api/uva/submission/prepare and /api/uva/submission/confirm"
+        - working: true
+          agent: "testing"
+          comment: "✅ PASSED - Submission pipeline complete: /prepare endpoint validates all prerequisites (Steuernummer, BMF validation, XML generation) with 7 checklist items. Status workflow functioning (Ready: True, Status: validiert). /confirm endpoint successfully processes submission with FinanzOnline reference. Due date calculation correct (2025-02-15 for 12/2024)."
 
   - task: "KZ Reference Data"
     implemented: true
-    working: "NA"
+    working: true
     file: "backend/server.py"
     stuck_count: 0
     priority: "medium"
-    needs_retesting: true
+    needs_retesting: false
     status_history:
         - working: "NA"
           agent: "main"
           comment: "Complete KZ reference data with labels, sections, paragraphs, rates. GET /api/uva/kz-info"
+        - working: true
+          agent: "testing"
+          comment: "✅ PASSED - KZ reference data endpoint returns 44 complete KZ entries with proper structure (kz, label, section fields). All essential codes present: KZ000, KZ022, KZ029, KZ070, KZ090, KZ095. Data structure validated and complete."
 
 metadata:
   created_by: "main_agent"
