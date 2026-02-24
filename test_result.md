@@ -216,4 +216,57 @@ agent_communication:
     - agent: "main"
       message: "Implemented complete Go-live V1 backend: UVA engine, BMF validation, XML export, RKSV validation, submission pipeline. All endpoints are under /api/. Backend runs on port 8001. Test all endpoints with realistic Austrian invoice data including edge cases (RC, IG Erwerb, exports, multiple VAT rates, RKSV receipts). Test the full flow: calculate → validate → prepare submission → export XML."
     - agent: "testing"
+      message: "All 13 backend tests passed (100% pass rate). All APIs working correctly."
+    - agent: "main"
+      message: "Frontend integration complete. UVA page now has 3 tabs (Formular/Validierung/Einreichung), uses FastAPI backend engine. New components: SubmissionPipeline, UVAValidationResults, RKSVFields, useUVAEngine hook."
+
+frontend:
+  - task: "UVA Engine Integration (Tab: UVA-Formular)"
+    implemented: true
+    working: "NA"
+    file: "frontend/src/pages/UVA.tsx, frontend/src/hooks/useUVAEngine.ts"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: true
+    status_history:
+        - working: "NA"
+          agent: "main"
+          comment: "UVA page integrated with FastAPI backend. Calculation button triggers backend engine. KZ values display from engine results. Summary cards show totals. Engine processing details shown as warnings."
+
+  - task: "BMF Validierung Tab"
+    implemented: true
+    working: "NA"
+    file: "frontend/src/components/UVAValidationResults.tsx"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: true
+    status_history:
+        - working: "NA"
+          agent: "main"
+          comment: "Validation tab shows errors/warnings/infos with color-coded severity. KZ095 consistency check displayed. BMF plausibility pass/fail indicator."
+
+  - task: "Einreichungspipeline Tab"
+    implemented: true
+    working: "NA"
+    file: "frontend/src/components/SubmissionPipeline.tsx"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: true
+    status_history:
+        - working: "NA"
+          agent: "main"
+          comment: "Submission pipeline with status timeline, checklist, XML preview modal, download button, manual confirmation dialog with FinanzOnline reference input."
+
+  - task: "Tab Navigation"
+    implemented: true
+    working: "NA"
+    file: "frontend/src/pages/UVA.tsx"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: true
+    status_history:
+        - working: "NA"
+          agent: "main"
+          comment: "3 tabs: UVA-Formular, Validierung, Einreichung. Active tab highlighted with background. Validation tab shows green/red dot indicator."
+    - agent: "testing"
       message: "✅ COMPREHENSIVE BACKEND TESTING COMPLETED - All 6 backend tasks tested and PASSING. Created backend_test.py with 13 test cases covering: UVA calculation with realistic Austrian tax scenarios (all rates, treatments), BMF validation with error detection, XML export (both endpoints), RKSV validation with edge cases, complete submission pipeline, KZ reference data, and edge cases (empty UVA, zero/negative amounts). 100% success rate. Backend is production-ready for Go-live V1."
