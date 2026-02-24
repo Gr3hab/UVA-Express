@@ -303,7 +303,7 @@ async def api_export_xml(request_body: XMLExportRequest, request: Request):
 
 @api_router.post("/uva/export-xml-json", response_model=XMLExportResponse)
 async def api_export_xml_json(request_body: XMLExportRequest, request: Request):
-    cid = _get_request_id(request)
+    _get_request_id(request)  # ensure correlation
     try:
         result = build_uva_xml(request_body)
         return result
