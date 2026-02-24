@@ -243,7 +243,7 @@ Gib ein confidence-Feld (0-100) an.`,
       export_delivery: taxTreatment === "export",
       ocr_confidence: extracted.confidence,
       ocr_status: "completed",
-    }).eq("id", invoiceId);
+    }).eq("id", invoiceId).eq("user_id", user.id);
 
     if (updateError) {
       console.error("Update error:", updateError);
