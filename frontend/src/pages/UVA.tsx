@@ -354,9 +354,9 @@ const UVA = () => {
         <div className="p-8 space-y-6">
           {/* Actions bar */}
           <div className="flex items-center gap-4 flex-wrap">
-            <Button onClick={handleCalculate} disabled={calculating} className="gap-2">
-              <RefreshCw className={cn("h-4 w-4", calculating && "animate-spin")} />
-              {calculating ? "Berechne..." : "UVA berechnen"}
+            <Button onClick={handleCalculate} disabled={calculating || engine.loading} className="gap-2">
+              <RefreshCw className={cn("h-4 w-4", (calculating || engine.loading) && "animate-spin")} />
+              {calculating || engine.loading ? "Berechne..." : "UVA berechnen"}
             </Button>
             <div className="flex items-center gap-2">
               <Input
@@ -365,21 +365,74 @@ const UVA = () => {
                 onChange={e => setSteuernummer(e.target.value)}
                 className="w-60"
               />
-              <Button variant="outline" onClick={handleExport} disabled={exporting || !currentPeriod} className="gap-2">
+              <Button variant="outline" onClick={handleExport} disabled={exporting || engine.loading || !hasData} className="gap-2">
                 <Download className="h-4 w-4" />
-                {exporting ? "Exportiere..." : "XML für FinanzOnline"}
+                XML
               </Button>
             </div>
-            {currentPeriod && (
+            {engineKZ && (
+              <Button variant="outline" onClick={handleValidate} disabled={engine.loading} className="gap-2">
+                <Shield className="h-4 w-4" />
+                BMF-Prüfung
+              </Button>
+            )}
+            {hasData && (
               <div className={cn(
                 "flex items-center gap-2 text-xs font-medium rounded-lg px-3 py-1.5",
-                currentPeriod.status === "calculated" ? "bg-success/10 text-success" : "bg-muted text-muted-foreground"
+                engine.validationResult?.valid ? "bg-success/10 text-success" :
+                currentPeriod?.status === "calculated" ? "bg-success/10 text-success" :
+                "bg-muted text-muted-foreground"
               )}>
-                {currentPeriod.status === "calculated" ? <CheckCircle2 className="h-3.5 w-3.5" /> : <AlertTriangle className="h-3.5 w-3.5" />}
-                {currentPeriod.status === "calculated" ? "Berechnet" : currentPeriod.status === "submitted" ? "Eingereicht" : "Entwurf"}
+                {engine.validationResult?.valid || currentPeriod?.status === "calculated"
+                  ? <CheckCircle2 className="h-3.5 w-3.5" />
+                  : <AlertTriangle className="h-3.5 w-3.5" />}
+                {engine.validationResult?.valid ? "Validiert"
+                  : engineKZ ? "Engine berechnet"
+                  : currentPeriod?.status === "calculated" ? "Berechnet"
+                  : currentPeriod?.status === "submitted" ? "Eingereicht"
+                  : "Entwurf"}
               </div>
             )}
+            {engineSummary && (
+              <span className="text-xs text-muted-foreground">
+                {engineSummary.invoice_count} Rechnungen ({engineSummary.ausgang_count} Ausgang, {engineSummary.eingang_count} Eingang
+                {engineSummary.ig_count > 0 ? `, ${engineSummary.ig_count} IG` : ""}
+                {engineSummary.rc_count > 0 ? `, ${engineSummary.rc_count} RC` : ""}
+                {engineSummary.rksv_count > 0 ? `, ${engineSummary.rksv_count} RKSV` : ""})
+              </span>
+            )}
           </div>
+
+          {/* Tabs */}
+          {hasData && (
+            <div className="flex items-center gap-1 bg-muted rounded-lg p-1">
+              {[
+                { key: "formular" as const, label: "UVA-Formular", icon: Calculator },
+                { key: "validierung" as const, label: "Validierung", icon: Shield },
+                { key: "einreichung" as const, label: "Einreichung", icon: ClipboardCheck },
+              ].map(tab => (
+                <button
+                  key={tab.key}
+                  onClick={() => setActiveTab(tab.key)}
+                  className={cn(
+                    "flex items-center gap-2 px-4 py-2 rounded-md text-sm font-medium transition-all",
+                    activeTab === tab.key
+                      ? "bg-background text-foreground shadow-sm"
+                      : "text-muted-foreground hover:text-foreground"
+                  )}
+                >
+                  <tab.icon className="h-4 w-4" />
+                  {tab.label}
+                  {tab.key === "validierung" && engine.validationResult && (
+                    <span className={cn(
+                      "ml-1 w-2 h-2 rounded-full",
+                      engine.validationResult.valid ? "bg-green-500" : "bg-red-500"
+                    )} />
+                  )}
+                </button>
+              ))}
+            </div>
+          )}
 
           {!currentPeriod ? (
             <div className="rounded-xl bg-card card-shadow p-12 text-center">
