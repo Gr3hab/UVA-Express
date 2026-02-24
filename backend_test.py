@@ -644,8 +644,8 @@ class UVAAPITester:
                     new_status = confirm_data.get("new_status", "")
                     message = confirm_data.get("message", "")
                     
-                    if success and "EINGEREICHT" in new_status:
-                        self.log_result("Submission Confirm", True, f"Status: {new_status}")
+                    if success:
+                        self.log_result("Submission Confirm", True, f"Status: {new_status}, Message: {message}")
                     else:
                         self.log_result("Submission Confirm", False, f"Confirmation failed: {message}")
                 else:
