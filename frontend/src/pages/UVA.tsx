@@ -102,12 +102,15 @@ const ColumnHeaders = ({ showNetto = true, nettoLabel = "Bemessung", ustLabel = 
 const UVA = () => {
   const { user, loading: authLoading, signOut } = useAuth();
   const { periods, loading, calculating, exporting, calculateUVA, exportXML } = useUVA();
+  const engine = useUVAEngine();
   const { toast } = useToast();
   
   const now = new Date();
   const [selectedYear, setSelectedYear] = useState(now.getFullYear());
   const [selectedMonth, setSelectedMonth] = useState(now.getMonth());
   const [steuernummer, setSteuernummer] = useState("");
+  const [activeTab, setActiveTab] = useState<"formular" | "validierung" | "einreichung">("formular");
+  const [xmlPreview, setXmlPreview] = useState<string | null>(null);
 
   const currentPeriod = useMemo(() => {
     return periods.find(p => p.period_year === selectedYear && p.period_month === selectedMonth + 1);
@@ -123,12 +126,72 @@ const UVA = () => {
     else setSelectedMonth(m => m + 1);
   };
 
+  // Convert Supabase invoices to engine format
+  const fetchInvoicesForEngine = useCallback(async (): Promise<InvoiceForEngine[]> => {
+    try {
+      const periodStart = `${selectedYear}-${String(selectedMonth + 1).padStart(2, "0")}-01`;
+      const nextMonth = selectedMonth + 2 > 12 ? 1 : selectedMonth + 2;
+      const nextYear = selectedMonth + 2 > 12 ? selectedYear + 1 : selectedYear;
+      const periodEnd = `${nextYear}-${String(nextMonth).padStart(2, "0")}-01`;
+
+      const { data, error } = await supabase
+        .from("invoices")
+        .select("*")
+        .gte("invoice_date", periodStart)
+        .lt("invoice_date", periodEnd);
+
+      if (error) throw error;
+      if (!data || data.length === 0) return [];
+
+      return data.map((inv: any) => ({
+        id: inv.id,
+        invoice_number: inv.invoice_number || "",
+        invoice_date: inv.invoice_date,
+        vendor_name: inv.vendor_name || "",
+        net_amount: Number(inv.net_amount) || 0,
+        vat_rate: Number(inv.vat_rate) || 20,
+        vat_amount: Number(inv.vat_amount) || 0,
+        gross_amount: Number(inv.gross_amount) || 0,
+        invoice_type: inv.invoice_type || "eingang",
+        tax_treatment: inv.tax_treatment || "normal",
+        reverse_charge: inv.reverse_charge || false,
+        ig_erwerb: inv.ig_erwerb || false,
+        ig_lieferung: inv.ig_lieferung || false,
+        export_delivery: inv.export_delivery || false,
+        currency: inv.currency || "EUR",
+        description: inv.description || "",
+        rksv_receipt: inv.rksv_receipt || false,
+        rksv_kassenid: inv.rksv_kassenid || "",
+        rksv_belegnr: inv.rksv_belegnr || "",
+        rksv_qr_data: inv.rksv_qr_data || "",
+      }));
+    } catch (err: any) {
+      toast({ title: "Fehler", description: "Rechnungen konnten nicht geladen werden: " + err.message, variant: "destructive" });
+      return [];
+    }
+  }, [selectedYear, selectedMonth, toast]);
+
   const handleCalculate = async () => {
     try {
+      // First try the backend engine
+      const invoices = await fetchInvoicesForEngine();
+      if (invoices.length > 0) {
+        const result = await engine.calculateUVA(
+          invoices,
+          selectedYear,
+          selectedMonth + 1
+        );
+        if (result) {
+          // Also trigger the Supabase-side calculation for persistence
+          await calculateUVA(selectedYear, selectedMonth + 1).catch(() => {});
+          return;
+        }
+      }
+      // Fallback to Supabase edge function
       const result = await calculateUVA(selectedYear, selectedMonth + 1);
       toast({
         title: "UVA berechnet",
-        description: `${result.summary?.invoiceCount || 0} Rechnungen verarbeitet (${result.summary?.eingangCount || 0} Eingang, ${result.summary?.ausgangCount || 0} Ausgang)`,
+        description: `${result.summary?.invoiceCount || 0} Rechnungen verarbeitet`,
       });
     } catch (err: any) {
       toast({ title: "Fehler", description: err.message, variant: "destructive" });
@@ -140,12 +203,73 @@ const UVA = () => {
       toast({ title: "Steuernummer fehlt", description: "Bitte gib deine Steuernummer ein", variant: "destructive" });
       return;
     }
-    try {
-      await exportXML(selectedYear, selectedMonth + 1, steuernummer);
-      toast({ title: "XML exportiert", description: "Datei wurde heruntergeladen – bereit für FinanzOnline" });
-    } catch (err: any) {
-      toast({ title: "Fehler", description: err.message, variant: "destructive" });
+    // Use engine for XML export if we have engine results
+    if (engine.calculationResult?.kz_values) {
+      await engine.exportXML(
+        engine.calculationResult.kz_values,
+        steuernummer,
+        selectedYear,
+        selectedMonth + 1
+      );
+    } else {
+      // Fallback to Supabase
+      try {
+        await exportXML(selectedYear, selectedMonth + 1, steuernummer);
+        toast({ title: "XML exportiert", description: "Datei wurde heruntergeladen – bereit für FinanzOnline" });
+      } catch (err: any) {
+        toast({ title: "Fehler", description: err.message, variant: "destructive" });
+      }
     }
+  };
+
+  const handleValidate = async () => {
+    if (engine.calculationResult?.kz_values) {
+      const invoices = await fetchInvoicesForEngine();
+      await engine.validateUVA(
+        engine.calculationResult.kz_values,
+        selectedYear,
+        selectedMonth + 1,
+        invoices
+      );
+      setActiveTab("validierung");
+    } else {
+      toast({ title: "Zuerst berechnen", description: "Bitte zuerst die UVA über die Engine berechnen", variant: "destructive" });
+    }
+  };
+
+  const handlePrepareSubmission = async () => {
+    if (!steuernummer) {
+      toast({ title: "Steuernummer fehlt", description: "Bitte Steuernummer eingeben", variant: "destructive" });
+      return;
+    }
+    if (engine.calculationResult?.kz_values) {
+      const invoices = await fetchInvoicesForEngine();
+      await engine.prepareSubmission(
+        engine.calculationResult.kz_values,
+        selectedYear,
+        selectedMonth + 1,
+        steuernummer,
+        invoices
+      );
+    } else {
+      toast({ title: "Zuerst berechnen", description: "Bitte zuerst die UVA berechnen", variant: "destructive" });
+    }
+  };
+
+  const handlePreviewXML = async () => {
+    if (engine.calculationResult?.kz_values && steuernummer) {
+      const xml = await engine.exportXMLPreview(
+        engine.calculationResult.kz_values,
+        steuernummer,
+        selectedYear,
+        selectedMonth + 1
+      );
+      setXmlPreview(xml);
+    }
+  };
+
+  const handleConfirmSubmission = async (reference?: string, note?: string) => {
+    await engine.confirmSubmission(selectedYear, selectedMonth + 1, reference, note);
   };
 
   if (authLoading) {
