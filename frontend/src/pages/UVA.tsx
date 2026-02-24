@@ -334,6 +334,10 @@ const UVA = () => {
                 <h1 className="font-display text-xl font-bold text-foreground">Umsatzsteuervoranmeldung</h1>
                 <p className="text-sm text-muted-foreground">U 30 · Formular 2026 · gem. § 21 Abs. 1 UStG 1994</p>
               </div>
+              <div className="ml-4 flex items-center gap-1.5 bg-amber-50 text-amber-800 border border-amber-200 rounded-lg px-3 py-1">
+                <AlertTriangle className="h-3.5 w-3.5" />
+                <span className="text-xs font-medium">V1 Pilotbetrieb · Freigabepflicht</span>
+              </div>
             </div>
             <div className="flex items-center gap-3">
               <div className="flex items-center gap-2 rounded-lg bg-muted px-1 py-1">
