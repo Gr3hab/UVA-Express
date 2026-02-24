@@ -1,14 +1,19 @@
+import React from "react";
 import { Sidebar } from "@/components/Sidebar";
 import { useAuth } from "@/hooks/useAuth";
 import { useUVA, UVAPeriodData } from "@/hooks/useUVA";
-import { useState, useMemo } from "react";
-import { Calculator, Download, RefreshCw, ChevronLeft, ChevronRight, FileText, AlertTriangle, CheckCircle2, Info, TrendingUp, TrendingDown, Receipt, ShieldCheck } from "lucide-react";
+import { useUVAEngine, type InvoiceForEngine, type UVACalculationResult, type UVAValidationResult, type SubmissionPrepareResult } from "@/hooks/useUVAEngine";
+import { useState, useMemo, useCallback } from "react";
+import { Calculator, Download, RefreshCw, ChevronLeft, ChevronRight, FileText, AlertTriangle, CheckCircle2, Info, TrendingUp, TrendingDown, Receipt, ShieldCheck, Shield, ClipboardCheck, Eye } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useToast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
+import { SubmissionPipeline } from "@/components/SubmissionPipeline";
+import { UVAValidationResults } from "@/components/UVAValidationResults";
 import Auth from "@/pages/Auth";
+import { supabase } from "@/integrations/supabase/client";
 
 const MONTHS = ["Jänner", "Februar", "März", "April", "Mai", "Juni", "Juli", "August", "September", "Oktober", "November", "Dezember"];
 
