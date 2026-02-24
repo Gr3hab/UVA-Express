@@ -197,9 +197,10 @@ backend:
 
 metadata:
   created_by: "main_agent"
-  version: "2.0"
-  test_sequence: 2
-  run_ui: false
+  version: "2.1"
+  test_sequence: 3
+  run_ui: true
+  last_test_date: "2026-02-24"
 
 test_plan:
   current_focus:
