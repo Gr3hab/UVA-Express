@@ -285,12 +285,40 @@ const UVA = () => {
   const p = currentPeriod;
   const n = (v: any) => Number(v) || 0;
 
+  // Use engine results when available, fallback to Supabase period data
+  const engineKZ = engine.calculationResult?.kz_values;
+  const engineSummary = engine.calculationResult?.summary;
+
   // Calculate section totals for display
-  const summeUst = p ? n(p.kz022_ust) + n(p.kz029_ust) + n(p.kz006_ust) + n(p.kz037_ust) + n((p as any).kz052_ust) + n((p as any).kz007_ust) : 0;
-  const summeSteuerschuld = p ? n(p.kz056_ust) + n(p.kz057_ust) + n(p.kz048_ust) + n(p.kz044_ust) + n(p.kz032_ust) : 0;
-  const summeIGUst = p ? n(p.kz072_ust) + n(p.kz073_ust) + n(p.kz008_ust) + n((p as any).kz088_ust) : 0;
+  const summeUst = engineKZ
+    ? n(engineKZ.kz022_ust) + n(engineKZ.kz029_ust) + n(engineKZ.kz006_ust) + n(engineKZ.kz037_ust) + n(engineKZ.kz052_ust) + n(engineKZ.kz007_ust)
+    : p ? n(p.kz022_ust) + n(p.kz029_ust) + n(p.kz006_ust) + n(p.kz037_ust) + n((p as any).kz052_ust) + n((p as any).kz007_ust) : 0;
+
+  const summeSteuerschuld = engineKZ
+    ? n(engineKZ.kz056_ust) + n(engineKZ.kz057_ust) + n(engineKZ.kz048_ust) + n(engineKZ.kz044_ust) + n(engineKZ.kz032_ust)
+    : p ? n(p.kz056_ust) + n(p.kz057_ust) + n(p.kz048_ust) + n(p.kz044_ust) + n(p.kz032_ust) : 0;
+
+  const summeIGUst = engineKZ
+    ? n(engineKZ.kz072_ust) + n(engineKZ.kz073_ust) + n(engineKZ.kz008_ust) + n(engineKZ.kz088_ust)
+    : p ? n(p.kz072_ust) + n(p.kz073_ust) + n(p.kz008_ust) + n((p as any).kz088_ust) : 0;
+
   const gesamtUst = summeUst + summeSteuerschuld + summeIGUst;
-  const summeVorsteuer = p ? n(p.kz060_vorsteuer) + n(p.kz061_vorsteuer) + n(p.kz083_vorsteuer) + n(p.kz065_vorsteuer) + n(p.kz066_vorsteuer) + n(p.kz082_vorsteuer) + n(p.kz087_vorsteuer) + n(p.kz089_vorsteuer) + n(p.kz064_vorsteuer) + n(p.kz062_vorsteuer) + n(p.kz063_vorsteuer) + n(p.kz067_vorsteuer) : 0;
+
+  const summeVorsteuer = engineKZ
+    ? n(engineKZ.kz060_vorsteuer) + n(engineKZ.kz061_vorsteuer) + n(engineKZ.kz083_vorsteuer) + n(engineKZ.kz065_vorsteuer) + n(engineKZ.kz066_vorsteuer) + n(engineKZ.kz082_vorsteuer) + n(engineKZ.kz087_vorsteuer) + n(engineKZ.kz089_vorsteuer) + n(engineKZ.kz064_vorsteuer) + n(engineKZ.kz062_vorsteuer) + n(engineKZ.kz063_vorsteuer) + n(engineKZ.kz067_vorsteuer)
+    : p ? n(p.kz060_vorsteuer) + n(p.kz061_vorsteuer) + n(p.kz083_vorsteuer) + n(p.kz065_vorsteuer) + n(p.kz066_vorsteuer) + n(p.kz082_vorsteuer) + n(p.kz087_vorsteuer) + n(p.kz089_vorsteuer) + n(p.kz064_vorsteuer) + n(p.kz062_vorsteuer) + n(p.kz063_vorsteuer) + n(p.kz067_vorsteuer) : 0;
+
+  const kz095 = engineKZ ? n(engineKZ.kz095_betrag) : p ? n(p.kz095_betrag) : 0;
+  const kz090 = engineKZ ? n(engineKZ.kz090_betrag) : p ? n(p.kz090_betrag) : 0;
+  const dueDate = engineSummary?.due_date || (p ? p.due_date : null);
+  const hasData = !!(engineKZ || currentPeriod);
+
+  // KZ value getter - prefers engine results
+  const kzVal = (field: string): number => {
+    if (engineKZ && (engineKZ as any)[field] !== undefined) return n((engineKZ as any)[field]);
+    if (p) return n((p as any)[field]);
+    return 0;
+  };
 
   return (
     <div className="min-h-screen bg-background">
