@@ -173,7 +173,8 @@ serve(async (req) => {
       },
     });
   } catch (e) {
-    console.error("Export UVA XML error:", e);
+    const errorCode = e instanceof Error ? e.message : "UNKNOWN_ERROR";
+    console.error("UVA XML export failed:", errorCode);
     return new Response(JSON.stringify({ error: "XML-Export fehlgeschlagen. Bitte versuchen Sie es erneut." }), {
       status: 500,
       headers: { ...corsHeaders, "Content-Type": "application/json" },
