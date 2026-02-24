@@ -102,73 +102,98 @@
 # Testing Data - Main Agent and testing sub agent both should log testing data below this section
 #====================================================================================================
 
-user_problem_statement: "Fix all 4 security scan issues: OCR Function Missing Invoice Ownership Validation (Error), Leaked Password Protection Disabled (Warning), Dynamic CSS Generation with User-Controlled Colors (Warning), Detailed Error Information in Edge Functions (Info)"
+user_problem_statement: "Go-live: 100% automatische UVA-Engine, RKSV-Validierung, steuerlich belastbare Einreichungspipeline, produktionsreife Fehlerbehandlung/Audit-Trail. FastAPI als zentrale UVA-Engine, Supabase Postgres als Hauptdatenbank."
 
 backend:
-  - task: "OCR Function Invoice Ownership Validation"
+  - task: "UVA Calculation Engine"
     implemented: true
     working: "NA"
-    file: "frontend/supabase/functions/ocr-invoice/index.ts"
+    file: "backend/uva_engine.py"
     stuck_count: 0
     priority: "high"
     needs_retesting: true
     status_history:
         - working: "NA"
           agent: "main"
-          comment: "Added ownership check before OCR processing: verifies invoice belongs to authenticated user via .eq('user_id', user.id) on all queries. Returns 403 if ownership check fails."
+          comment: "Implemented complete UVA calculation engine with all KZ codes from U30 2026 form. Handles: normal 20%/10%/13%/19%/7%, exports, IG Lieferung, IG Erwerb, all Reverse Charge variants, Einfuhr, Grundstück, Kleinunternehmer. POST /api/uva/calculate"
 
-  - task: "Leaked Password Protection Enabled"
+  - task: "UVA BMF Validation"
     implemented: true
     working: "NA"
-    file: "frontend/supabase/config.toml"
+    file: "backend/uva_validator.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: true
+    status_history:
+        - working: "NA"
+          agent: "main"
+          comment: "BMF plausibility checks: rate consistency, KZ095 recalculation, RC symmetry, IG symmetry, negative amounts, empty UVA, duplicate invoices, period checks. POST /api/uva/validate"
+
+  - task: "BMF XML Export"
+    implemented: true
+    working: "NA"
+    file: "backend/uva_xml.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: true
+    status_history:
+        - working: "NA"
+          agent: "main"
+          comment: "BMF-compliant ERKLAERUNGENPAKET XML with all KZ codes, proper XML escaping, zero-value filtering. POST /api/uva/export-xml and /api/uva/export-xml-json"
+
+  - task: "RKSV Validation"
+    implemented: true
+    working: "NA"
+    file: "backend/rksv_validator.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: true
+    status_history:
+        - working: "NA"
+          agent: "main"
+          comment: "RKSV V1: Kassen-ID format, Belegnummer format, QR-data structure validation, duplicate check, plausibility checks. POST /api/rksv/validate"
+
+  - task: "Submission Pipeline"
+    implemented: true
+    working: "NA"
+    file: "backend/server.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: true
+    status_history:
+        - working: "NA"
+          agent: "main"
+          comment: "Submission preparation with checklist (Steuernummer, BMF validation, KZ095 consistency, XML generation, period check). Status workflow: Entwurf→Berechnet→Validiert→Freigegeben→Eingereicht→Bestätigt. POST /api/uva/submission/prepare and /api/uva/submission/confirm"
+
+  - task: "KZ Reference Data"
+    implemented: true
+    working: "NA"
+    file: "backend/server.py"
     stuck_count: 0
     priority: "medium"
     needs_retesting: true
     status_history:
         - working: "NA"
           agent: "main"
-          comment: "Set verify_jwt=true for all edge functions. Added [auth] section with enable_leaked_password_check=true and min_password_length=8."
-
-  - task: "Dynamic CSS Color Sanitization"
-    implemented: true
-    working: "NA"
-    file: "frontend/src/components/ui/chart.tsx"
-    stuck_count: 0
-    priority: "medium"
-    needs_retesting: true
-    status_history:
-        - working: "NA"
-          agent: "main"
-          comment: "Added sanitizeCssColor function with regex validation for hex, rgb, rgba, hsl, hsla, named colors, and CSS vars. Invalid colors are filtered out."
-
-  - task: "Edge Function Error Logging Sanitization"
-    implemented: true
-    working: "NA"
-    file: "frontend/supabase/functions/ocr-invoice/index.ts, frontend/supabase/functions/calculate-uva/index.ts, frontend/supabase/functions/export-uva-xml/index.ts"
-    stuck_count: 0
-    priority: "low"
-    needs_retesting: true
-    status_history:
-        - working: "NA"
-          agent: "main"
-          comment: "Replaced console.error calls that logged full error objects/API responses with safe error code strings only. No stack traces or sensitive data in logs."
+          comment: "Complete KZ reference data with labels, sections, paragraphs, rates. GET /api/uva/kz-info"
 
 metadata:
   created_by: "main_agent"
-  version: "1.0"
-  test_sequence: 0
+  version: "2.0"
+  test_sequence: 1
   run_ui: false
 
 test_plan:
   current_focus:
-    - "OCR Function Invoice Ownership Validation"
-    - "Leaked Password Protection Enabled"
-    - "Dynamic CSS Color Sanitization"
-    - "Edge Function Error Logging Sanitization"
+    - "UVA Calculation Engine"
+    - "UVA BMF Validation"
+    - "BMF XML Export"
+    - "RKSV Validation"
+    - "Submission Pipeline"
   stuck_tasks: []
   test_all: true
   test_priority: "high_first"
 
 agent_communication:
     - agent: "main"
-      message: "Implemented all 4 security fixes. OCR ownership validation is the critical one. The Supabase edge functions and config changes need to be deployed to Supabase to take effect - these are code-level fixes that will be active on next deployment."
+      message: "Implemented complete Go-live V1 backend: UVA engine, BMF validation, XML export, RKSV validation, submission pipeline. All endpoints are under /api/. Backend runs on port 8001. Test all endpoints with realistic Austrian invoice data including edge cases (RC, IG Erwerb, exports, multiple VAT rates, RKSV receipts). Test the full flow: calculate → validate → prepare submission → export XML."
