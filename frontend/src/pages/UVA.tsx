@@ -606,14 +606,14 @@ const UVA = () => {
                       <p className="text-xs text-muted-foreground mt-0.5">Art. 1 BMR – Erwerbe aus anderen EU-Mitgliedstaaten</p>
                     </div>
                     <ColumnHeaders />
-                    <KZLine kz="070" label="Steuerfrei (Art. 6 Abs 2)" tooltip="Steuerfreie IG Erwerbe" netto={n(p.kz070_netto)} showUst={false} />
-                    <KZLine kz="071" label="Neufahrzeuge ohne UID (Art. 1 Abs 8)" tooltip="IG Erwerb neuer Fahrzeuge durch Nicht-Unternehmer" netto={n((p as any).kz071_netto)} showUst={false} />
-                    <KZLine kz="072" label="20 % Normalsteuersatz" netto={n(p.kz072_netto)} ust={n(p.kz072_ust)} />
-                    <KZLine kz="073" label="10 % ermäßigter Steuersatz" netto={n(p.kz073_netto)} ust={n(p.kz073_ust)} />
-                    <KZLine kz="008" label="13 % ermäßigter Steuersatz" netto={n(p.kz008_netto)} ust={n(p.kz008_ust)} />
-                    <KZLine kz="088" label="19 % (Jungholz/Mittelberg)" netto={n((p as any).kz088_netto)} ust={n((p as any).kz088_ust)} />
-                    <KZLine kz="076" label="Neufahrzeuge 20 %" tooltip="IG Erwerb neuer Fahrzeuge 20%" netto={n((p as any).kz076_netto)} showUst={false} />
-                    <KZLine kz="077" label="Neufahrzeuge 10 %" netto={n((p as any).kz077_netto)} showUst={false} />
+                    <KZLine kz="070" label="Steuerfrei (Art. 6 Abs 2)" tooltip="Steuerfreie IG Erwerbe" netto={kzVal("kz070_netto")} showUst={false} />
+                    <KZLine kz="071" label="Neufahrzeuge ohne UID (Art. 1 Abs 8)" tooltip="IG Erwerb neuer Fahrzeuge durch Nicht-Unternehmer" netto={kzVal("kz071_netto")} showUst={false} />
+                    <KZLine kz="072" label="20 % Normalsteuersatz" netto={kzVal("kz072_netto")} ust={kzVal("kz072_ust")} />
+                    <KZLine kz="073" label="10 % ermäßigter Steuersatz" netto={kzVal("kz073_netto")} ust={kzVal("kz073_ust")} />
+                    <KZLine kz="008" label="13 % ermäßigter Steuersatz" netto={kzVal("kz008_netto")} ust={kzVal("kz008_ust")} />
+                    <KZLine kz="088" label="19 % (Jungholz/Mittelberg)" netto={kzVal("kz088_netto")} ust={kzVal("kz088_ust")} />
+                    <KZLine kz="076" label="Neufahrzeuge 20 %" tooltip="IG Erwerb neuer Fahrzeuge 20%" netto={kzVal("kz076_netto")} showUst={false} />
+                    <KZLine kz="077" label="Neufahrzeuge 10 %" netto={kzVal("kz077_netto")} showUst={false} />
                     <KZLine kz="" label="Zwischensumme IG Erwerb USt" ust={summeIGUst} isSubTotal showNetto={false} />
                   </div>
 
