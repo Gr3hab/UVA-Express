@@ -588,11 +588,11 @@ const UVA = () => {
                       <p className="text-xs text-muted-foreground mt-0.5">Nur der Steuerbetrag (keine Bemessungsgrundlage)</p>
                     </div>
                     <ColumnHeaders showNetto={false} ustLabel="Steuer" />
-                    <KZLine kz="056" label="§ 11 Abs 12/14, § 16 Abs 2" tooltip="Steuerschuld kraft Rechnungslegung, Art 7 Abs 4" ust={n(p.kz056_ust)} showNetto={false} />
-                    <KZLine kz="057" label="§ 19 Abs 1 zweiter Satz, 1c, 1e" tooltip="Reverse Charge – ausländischer Leistender, Art 25 Abs 5" ust={n(p.kz057_ust)} showNetto={false} />
-                    <KZLine kz="048" label="§ 19 Abs 1 dritter + vierter Satz" tooltip="Sonstige Reverse-Charge-Fälle" ust={n(p.kz048_ust)} showNetto={false} />
-                    <KZLine kz="044" label="§ 19 Abs 1a – Bauleistungen" tooltip="Reverse Charge bei Bauleistungen" ust={n(p.kz044_ust)} showNetto={false} />
-                    <KZLine kz="032" label="§ 19 Abs 1b, 1d – Schrott/Sicherungseigentum" tooltip="Reverse Charge bei Schrott, Abfallstoffen, Sicherungseigentum" ust={n(p.kz032_ust)} showNetto={false} />
+                    <KZLine kz="056" label="§ 11 Abs 12/14, § 16 Abs 2" tooltip="Steuerschuld kraft Rechnungslegung, Art 7 Abs 4" ust={kzVal("kz056_ust")} showNetto={false} />
+                    <KZLine kz="057" label="§ 19 Abs 1 zweiter Satz, 1c, 1e" tooltip="Reverse Charge – ausländischer Leistender, Art 25 Abs 5" ust={kzVal("kz057_ust")} showNetto={false} />
+                    <KZLine kz="048" label="§ 19 Abs 1 dritter + vierter Satz" tooltip="Sonstige Reverse-Charge-Fälle" ust={kzVal("kz048_ust")} showNetto={false} />
+                    <KZLine kz="044" label="§ 19 Abs 1a – Bauleistungen" tooltip="Reverse Charge bei Bauleistungen" ust={kzVal("kz044_ust")} showNetto={false} />
+                    <KZLine kz="032" label="§ 19 Abs 1b, 1d – Schrott/Sicherungseigentum" tooltip="Reverse Charge bei Schrott, Abfallstoffen, Sicherungseigentum" ust={kzVal("kz032_ust")} showNetto={false} />
                     <KZLine kz="" label="Zwischensumme Steuerschuld" ust={summeSteuerschuld} isSubTotal showNetto={false} />
                   </div>
                 </div>
