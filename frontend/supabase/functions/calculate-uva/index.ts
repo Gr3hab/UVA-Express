@@ -354,7 +354,8 @@ serve(async (req) => {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
   } catch (e) {
-    console.error("Calculate UVA error:", e);
+    const errorCode = e instanceof Error ? e.message : "UNKNOWN_ERROR";
+    console.error("UVA calculation failed:", errorCode);
     return new Response(JSON.stringify({ error: "UVA-Berechnung fehlgeschlagen. Bitte versuchen Sie es erneut." }), {
       status: 500,
       headers: { ...corsHeaders, "Content-Type": "application/json" },
