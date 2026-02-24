@@ -645,7 +645,7 @@ const UVA = () => {
                       <h3 className="font-display font-semibold text-card-foreground">7. Sonstige Berichtigungen</h3>
                     </div>
                     <ColumnHeaders showNetto={false} ustLabel="Betrag" />
-                    <KZLine kz="090" label="Sonstige Berichtigungen" tooltip="z.B. Korrektur früherer Perioden" ust={n(p.kz090_betrag)} showNetto={false} />
+                    <KZLine kz="090" label="Sonstige Berichtigungen" tooltip="z.B. Korrektur früherer Perioden" ust={kz090} showNetto={false} />
                   </div>
 
                   {/* ERGEBNIS: KZ 095 */}
@@ -656,7 +656,7 @@ const UVA = () => {
                           KZ 095
                         </span>
                         <span className="font-display font-bold text-lg text-card-foreground">
-                          {n(p.kz095_betrag) >= 0 ? "Vorauszahlung (Zahllast)" : "Überschuss (Gutschrift)"}
+                          {kz095 >= 0 ? "Vorauszahlung (Zahllast)" : "Überschuss (Gutschrift)"}
                         </span>
                       </div>
                       <div className="bg-background rounded-lg p-4 space-y-2">
@@ -668,30 +668,31 @@ const UVA = () => {
                           <span className="text-muted-foreground">− Vorsteuern (Abschnitt 6)</span>
                           <span className="font-medium text-success">− {fmt(summeVorsteuer)}</span>
                         </div>
-                        {n(p.kz090_betrag) !== 0 && (
+                        {kz090 !== 0 && (
                           <div className="flex justify-between text-sm">
                             <span className="text-muted-foreground">± Berichtigungen (Abschnitt 7)</span>
-                            <span className="font-medium">{fmt(n(p.kz090_betrag))}</span>
+                            <span className="font-medium">{fmt(kz090)}</span>
                           </div>
                         )}
                         <div className="border-t border-border pt-2 flex justify-between">
                           <span className="font-semibold text-card-foreground">
-                            = {n(p.kz095_betrag) >= 0 ? "Zahllast" : "Gutschrift"}
+                            = {kz095 >= 0 ? "Zahllast" : "Gutschrift"}
                           </span>
-                          <span className={cn("font-display text-xl font-bold", n(p.kz095_betrag) >= 0 ? "text-destructive" : "text-success")}>
-                            {n(p.kz095_betrag) >= 0 ? "" : "− "}{fmt(Math.abs(n(p.kz095_betrag)))}
+                          <span className={cn("font-display text-xl font-bold", kz095 >= 0 ? "text-destructive" : "text-success")}>
+                            {kz095 >= 0 ? "" : "− "}{fmt(Math.abs(kz095))}
                           </span>
                         </div>
                       </div>
-                      {p.due_date && (
+                      {dueDate && (
                         <p className="text-xs text-muted-foreground mt-3">
-                          Fällig am: {new Date(p.due_date).toLocaleDateString("de-AT", { day: "2-digit", month: "long", year: "numeric" })} (15. des zweitfolgenden Monats gem. § 21 Abs 1 UStG)
+                          Fällig am: {new Date(dueDate).toLocaleDateString("de-AT", { day: "2-digit", month: "long", year: "numeric" })} (15. des zweitfolgenden Monats gem. § 21 Abs 1 UStG)
                         </p>
                       )}
                     </div>
                   </div>
                 </div>
               </div>
+              )} {/* end activeTab === formular */}
             </>
           )}
         </div>
