@@ -1,10 +1,16 @@
 project_id = "lljdgjnwcjartondpqfw"
 
+[auth]
+# Enable protection against leaked/compromised passwords
+# Checks passwords against known breach databases (HaveIBeenPwned)
+enable_leaked_password_check = true
+min_password_length = 8
+
 [functions.ocr-invoice]
-verify_jwt = false
+verify_jwt = true
 
 [functions.calculate-uva]
-verify_jwt = false
+verify_jwt = true
 
 [functions.export-uva-xml]
-verify_jwt = false
+verify_jwt = true
