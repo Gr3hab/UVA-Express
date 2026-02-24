@@ -690,7 +690,6 @@ const UVA = () => {
                   </div>
                 </div>
               </div>
-              </>
               )} {/* end activeTab === formular */}
             </>
           )}
