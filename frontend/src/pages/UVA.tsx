@@ -703,6 +703,18 @@ const UVA = () => {
                 </div>
               </div>
               )} {/* end activeTab === formular */}
+
+              {/* Footer Disclaimer */}
+              <div className="rounded-lg bg-muted/50 border border-border px-4 py-3 text-xs text-muted-foreground">
+                <p className="font-medium mb-1">Hinweis zur Nutzung (V1/Pilotbetrieb)</p>
+                <p>
+                  Diese Anwendung dient als Arbeitshilfe zur Vorbereitung der Umsatzsteuervoranmeldung.
+                  Die automatisierte Berechnung ersetzt keine steuerliche Beratung.
+                  Die Prüfung und Freigabe aller Werte vor der Einreichung bei FinanzOnline
+                  obliegt dem Steuerpflichtigen bzw. dessen steuerlichen Vertreter.
+                  Keine Gewähr für die Richtigkeit der berechneten Werte.
+                </p>
+              </div>
             </>
           )}
         </div>
