@@ -548,12 +548,12 @@ const UVA = () => {
                       <p className="text-xs text-muted-foreground mt-0.5">Bemessungsgrundlage und darauf entfallende Umsatzsteuer</p>
                     </div>
                     <ColumnHeaders />
-                    <KZLine kz="022" label="20 % Normalsteuersatz" tooltip="§ 10 Abs 1 UStG" netto={n(p.kz022_netto)} ust={n(p.kz022_ust)} />
-                    <KZLine kz="029" label="10 % ermäßigter Steuersatz" tooltip="§ 10 Abs 2 UStG – Lebensmittel, Bücher, Personenbeförderung" netto={n(p.kz029_netto)} ust={n(p.kz029_ust)} />
-                    <KZLine kz="006" label="13 % ermäßigter Steuersatz" tooltip="§ 10 Abs 3 UStG – Blumen, Tierfutter, Kunstgegenstände" netto={n(p.kz006_netto)} ust={n(p.kz006_ust)} />
-                    <KZLine kz="037" label="19 % (Jungholz und Mittelberg)" tooltip="Art XIV § 48 Abs 1 UStG" netto={n(p.kz037_netto)} ust={n(p.kz037_ust)} />
-                    <KZLine kz="052" label="10 % Zusatzsteuer Tourismusbetriebe" tooltip="§ 12 Abs 15 UStG" netto={n((p as any).kz052_netto)} ust={n((p as any).kz052_ust)} />
-                    <KZLine kz="007" label="5 % ermäßigter Steuersatz" tooltip="Historisch, teilweise noch relevant" netto={n((p as any).kz007_netto)} ust={n((p as any).kz007_ust)} />
+                    <KZLine kz="022" label="20 % Normalsteuersatz" tooltip="§ 10 Abs 1 UStG" netto={kzVal("kz022_netto")} ust={kzVal("kz022_ust")} />
+                    <KZLine kz="029" label="10 % ermäßigter Steuersatz" tooltip="§ 10 Abs 2 UStG – Lebensmittel, Bücher, Personenbeförderung" netto={kzVal("kz029_netto")} ust={kzVal("kz029_ust")} />
+                    <KZLine kz="006" label="13 % ermäßigter Steuersatz" tooltip="§ 10 Abs 3 UStG – Blumen, Tierfutter, Kunstgegenstände" netto={kzVal("kz006_netto")} ust={kzVal("kz006_ust")} />
+                    <KZLine kz="037" label="19 % (Jungholz und Mittelberg)" tooltip="Art XIV § 48 Abs 1 UStG" netto={kzVal("kz037_netto")} ust={kzVal("kz037_ust")} />
+                    <KZLine kz="052" label="10 % Zusatzsteuer Tourismusbetriebe" tooltip="§ 12 Abs 15 UStG" netto={kzVal("kz052_netto")} ust={kzVal("kz052_ust")} />
+                    <KZLine kz="007" label="5 % ermäßigter Steuersatz" tooltip="Historisch, teilweise noch relevant" netto={kzVal("kz007_netto")} ust={kzVal("kz007_ust")} />
                     <KZLine kz="" label="Zwischensumme steuerpflichtige Umsätze" ust={summeUst} isSubTotal showNetto={false} />
                   </div>
 
