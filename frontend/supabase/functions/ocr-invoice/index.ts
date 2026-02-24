@@ -256,7 +256,8 @@ Gib ein confidence-Feld (0-100) an.`,
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
   } catch (e) {
-    console.error("OCR error:", e);
+    const errorCode = e instanceof Error ? e.message : "UNKNOWN_ERROR";
+    console.error("OCR processing failed:", errorCode);
     return new Response(JSON.stringify({ error: "Rechnung konnte nicht verarbeitet werden. Bitte versuchen Sie es erneut." }), {
       status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
