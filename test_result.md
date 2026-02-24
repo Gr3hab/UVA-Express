@@ -101,3 +101,74 @@
 #====================================================================================================
 # Testing Data - Main Agent and testing sub agent both should log testing data below this section
 #====================================================================================================
+
+user_problem_statement: "Fix all 4 security scan issues: OCR Function Missing Invoice Ownership Validation (Error), Leaked Password Protection Disabled (Warning), Dynamic CSS Generation with User-Controlled Colors (Warning), Detailed Error Information in Edge Functions (Info)"
+
+backend:
+  - task: "OCR Function Invoice Ownership Validation"
+    implemented: true
+    working: "NA"
+    file: "frontend/supabase/functions/ocr-invoice/index.ts"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: true
+    status_history:
+        - working: "NA"
+          agent: "main"
+          comment: "Added ownership check before OCR processing: verifies invoice belongs to authenticated user via .eq('user_id', user.id) on all queries. Returns 403 if ownership check fails."
+
+  - task: "Leaked Password Protection Enabled"
+    implemented: true
+    working: "NA"
+    file: "frontend/supabase/config.toml"
+    stuck_count: 0
+    priority: "medium"
+    needs_retesting: true
+    status_history:
+        - working: "NA"
+          agent: "main"
+          comment: "Set verify_jwt=true for all edge functions. Added [auth] section with enable_leaked_password_check=true and min_password_length=8."
+
+  - task: "Dynamic CSS Color Sanitization"
+    implemented: true
+    working: "NA"
+    file: "frontend/src/components/ui/chart.tsx"
+    stuck_count: 0
+    priority: "medium"
+    needs_retesting: true
+    status_history:
+        - working: "NA"
+          agent: "main"
+          comment: "Added sanitizeCssColor function with regex validation for hex, rgb, rgba, hsl, hsla, named colors, and CSS vars. Invalid colors are filtered out."
+
+  - task: "Edge Function Error Logging Sanitization"
+    implemented: true
+    working: "NA"
+    file: "frontend/supabase/functions/ocr-invoice/index.ts, frontend/supabase/functions/calculate-uva/index.ts, frontend/supabase/functions/export-uva-xml/index.ts"
+    stuck_count: 0
+    priority: "low"
+    needs_retesting: true
+    status_history:
+        - working: "NA"
+          agent: "main"
+          comment: "Replaced console.error calls that logged full error objects/API responses with safe error code strings only. No stack traces or sensitive data in logs."
+
+metadata:
+  created_by: "main_agent"
+  version: "1.0"
+  test_sequence: 0
+  run_ui: false
+
+test_plan:
+  current_focus:
+    - "OCR Function Invoice Ownership Validation"
+    - "Leaked Password Protection Enabled"
+    - "Dynamic CSS Color Sanitization"
+    - "Edge Function Error Logging Sanitization"
+  stuck_tasks: []
+  test_all: true
+  test_priority: "high_first"
+
+agent_communication:
+    - agent: "main"
+      message: "Implemented all 4 security fixes. OCR ownership validation is the critical one. The Supabase edge functions and config changes need to be deployed to Supabase to take effect - these are code-level fixes that will be active on next deployment."
