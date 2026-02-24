@@ -272,18 +272,18 @@ backend:
 
 metadata:
   created_by: "main_agent"
-  version: "2.1"
-  test_sequence: 3
+  version: "2.2"
+  test_sequence: 4
   run_ui: true
   last_test_date: "2026-02-24"
 
 test_plan:
   current_focus:
-    - "UVA Calculation Engine"
-    - "UVA BMF Validation"
-    - "BMF XML Export"
-    - "RKSV Validation"
-    - "Submission Pipeline"
+    - "Idempotency System (Hardening V1.1)"
+    - "XSD Validation System (Hardening V1.1)"
+    - "Audit Trail System (Hardening V1.1)"
+    - "Metrics & Structured Logging (Hardening V1.1)"
+    - "Version & Hardening Verification (V1.1)"
   stuck_tasks: []
   test_all: true
   test_priority: "high_first"
