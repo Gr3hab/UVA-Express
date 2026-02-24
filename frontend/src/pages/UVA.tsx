@@ -406,31 +406,39 @@ const UVA = () => {
           {/* Tabs */}
           {hasData && (
             <div className="flex items-center gap-1 bg-muted rounded-lg p-1">
-              {[
-                { key: "formular" as const, label: "UVA-Formular", icon: Calculator },
-                { key: "validierung" as const, label: "Validierung", icon: Shield },
-                { key: "einreichung" as const, label: "Einreichung", icon: ClipboardCheck },
-              ].map(tab => (
-                <button
-                  key={tab.key}
-                  onClick={() => setActiveTab(tab.key)}
-                  className={cn(
-                    "flex items-center gap-2 px-4 py-2 rounded-md text-sm font-medium transition-all",
-                    activeTab === tab.key
-                      ? "bg-background text-foreground shadow-sm"
-                      : "text-muted-foreground hover:text-foreground"
-                  )}
-                >
-                  <tab.icon className="h-4 w-4" />
-                  {tab.label}
-                  {tab.key === "validierung" && engine.validationResult && (
-                    <span className={cn(
-                      "ml-1 w-2 h-2 rounded-full",
-                      engine.validationResult.valid ? "bg-green-500" : "bg-red-500"
-                    )} />
-                  )}
-                </button>
-              ))}
+              <button
+                onClick={() => setActiveTab("formular")}
+                className={cn(
+                  "flex items-center gap-2 px-4 py-2 rounded-md text-sm font-medium transition-all",
+                  activeTab === "formular" ? "bg-background text-foreground shadow-sm" : "text-muted-foreground hover:text-foreground"
+                )}
+              >
+                <Calculator className="h-4 w-4" />
+                UVA-Formular
+              </button>
+              <button
+                onClick={() => setActiveTab("validierung")}
+                className={cn(
+                  "flex items-center gap-2 px-4 py-2 rounded-md text-sm font-medium transition-all",
+                  activeTab === "validierung" ? "bg-background text-foreground shadow-sm" : "text-muted-foreground hover:text-foreground"
+                )}
+              >
+                <Shield className="h-4 w-4" />
+                Validierung
+                {engine.validationResult && (
+                  <span className={cn("ml-1 w-2 h-2 rounded-full", engine.validationResult.valid ? "bg-green-500" : "bg-red-500")} />
+                )}
+              </button>
+              <button
+                onClick={() => setActiveTab("einreichung")}
+                className={cn(
+                  "flex items-center gap-2 px-4 py-2 rounded-md text-sm font-medium transition-all",
+                  activeTab === "einreichung" ? "bg-background text-foreground shadow-sm" : "text-muted-foreground hover:text-foreground"
+                )}
+              >
+                <ClipboardCheck className="h-4 w-4" />
+                Einreichung
+              </button>
             </div>
           )}
 
