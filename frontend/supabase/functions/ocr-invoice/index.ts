@@ -245,7 +245,7 @@ Gib ein confidence-Feld (0-100) an.`,
     }).eq("id", invoiceId).eq("user_id", user.id);
 
     if (updateError) {
-      console.error("Update error:", updateError);
+      console.error("Invoice update failed for ID:", invoiceId);
       throw new Error("DB_UPDATE_FAILED");
     }
 
