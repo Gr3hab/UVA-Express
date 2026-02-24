@@ -5,6 +5,8 @@ BMF-konformer XML-Export · Formular U 30 (2026)
 Generiert FinanzOnline-konformes XML für die
 Umsatzsteuervoranmeldung gemäß BMF XML-Struktur.
 
+Inkl. XSD-Schema-Validierung und fachlich lesbare Fehlermeldungen.
+
 Referenz: BMF Softwarehersteller-Dokumentation
 https://www.bmf.gv.at/services/finanzonline/informationen-fuer-softwarehersteller/
 """
@@ -13,10 +15,262 @@ import logging
 import re
 from typing import List, Optional
 from datetime import datetime
+from io import BytesIO
 from models import (
     KZValues, XMLExportRequest, XMLExportResponse,
     ValidationIssue, ValidationSeverity,
 )
+
+logger = logging.getLogger(__name__)
+
+# ═══════════════════════════════════════════════════════════════════
+# Inline XSD Schema (BMF-angelehnt, U30 Erklaerung)
+# ═══════════════════════════════════════════════════════════════════
+
+UVA_XSD = """<?xml version="1.0" encoding="UTF-8"?>
+<xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema">
+  <xs:element name="ERKLAERUNGENPAKET">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element name="INFO_DATEN" type="InfoDatenType"/>
+        <xs:element name="ERKLAERUNG" type="ErklaerungType"/>
+      </xs:sequence>
+    </xs:complexType>
+  </xs:element>
+
+  <xs:complexType name="InfoDatenType">
+    <xs:sequence>
+      <xs:element name="ART" type="xs:string"/>
+      <xs:element name="FASESSION_ID" type="xs:string"/>
+      <xs:element name="STEUERNUMMER" type="xs:string"/>
+      <xs:element name="ZEITRAUM" type="xs:string"/>
+      <xs:element name="ERSTELLUNGSDATUM" type="xs:string"/>
+    </xs:sequence>
+  </xs:complexType>
+
+  <xs:complexType name="ErklaerungType">
+    <xs:sequence>
+      <xs:element name="SATZNR" type="xs:string"/>
+      <xs:element name="ALLGEMEINE_DATEN" type="AllgemeineDatenType"/>
+      <xs:element name="UNTERNEHMENSDATEN" type="UnternehmensDatenType" minOccurs="0"/>
+      <xs:element name="KENNZAHLEN" type="KennzahlenType"/>
+    </xs:sequence>
+    <xs:attribute name="art" type="xs:string" use="required"/>
+  </xs:complexType>
+
+  <xs:complexType name="AllgemeineDatenType">
+    <xs:sequence>
+      <xs:element name="ANBRINGEN" type="xs:string"/>
+      <xs:element name="ZEITRAUM" type="ZeitraumType"/>
+    </xs:sequence>
+  </xs:complexType>
+
+  <xs:complexType name="ZeitraumType">
+    <xs:sequence>
+      <xs:element name="JAHR" type="xs:string"/>
+      <xs:element name="MONAT" type="xs:string"/>
+    </xs:sequence>
+  </xs:complexType>
+
+  <xs:complexType name="UnternehmensDatenType">
+    <xs:sequence>
+      <xs:element name="BEZEICHNUNG" type="xs:string" minOccurs="0"/>
+      <xs:element name="STRASSE" type="xs:string" minOccurs="0"/>
+      <xs:element name="PLZ" type="xs:string" minOccurs="0"/>
+      <xs:element name="ORT" type="xs:string" minOccurs="0"/>
+    </xs:sequence>
+  </xs:complexType>
+
+  <xs:complexType name="KennzahlenType">
+    <xs:all>
+      <xs:element name="KZ000" type="xs:decimal" minOccurs="0"/>
+      <xs:element name="KZ001" type="xs:decimal" minOccurs="0"/>
+      <xs:element name="KZ021" type="xs:decimal" minOccurs="0"/>
+      <xs:element name="KZ022_BMGL" type="xs:decimal" minOccurs="0"/>
+      <xs:element name="KZ022_STEUER" type="xs:decimal" minOccurs="0"/>
+      <xs:element name="KZ029_BMGL" type="xs:decimal" minOccurs="0"/>
+      <xs:element name="KZ029_STEUER" type="xs:decimal" minOccurs="0"/>
+      <xs:element name="KZ006_BMGL" type="xs:decimal" minOccurs="0"/>
+      <xs:element name="KZ006_STEUER" type="xs:decimal" minOccurs="0"/>
+      <xs:element name="KZ037_BMGL" type="xs:decimal" minOccurs="0"/>
+      <xs:element name="KZ037_STEUER" type="xs:decimal" minOccurs="0"/>
+      <xs:element name="KZ052_BMGL" type="xs:decimal" minOccurs="0"/>
+      <xs:element name="KZ052_STEUER" type="xs:decimal" minOccurs="0"/>
+      <xs:element name="KZ007_BMGL" type="xs:decimal" minOccurs="0"/>
+      <xs:element name="KZ007_STEUER" type="xs:decimal" minOccurs="0"/>
+      <xs:element name="KZ011" type="xs:decimal" minOccurs="0"/>
+      <xs:element name="KZ012" type="xs:decimal" minOccurs="0"/>
+      <xs:element name="KZ015" type="xs:decimal" minOccurs="0"/>
+      <xs:element name="KZ017" type="xs:decimal" minOccurs="0"/>
+      <xs:element name="KZ018" type="xs:decimal" minOccurs="0"/>
+      <xs:element name="KZ019" type="xs:decimal" minOccurs="0"/>
+      <xs:element name="KZ016" type="xs:decimal" minOccurs="0"/>
+      <xs:element name="KZ020" type="xs:decimal" minOccurs="0"/>
+      <xs:element name="KZ056" type="xs:decimal" minOccurs="0"/>
+      <xs:element name="KZ057" type="xs:decimal" minOccurs="0"/>
+      <xs:element name="KZ048" type="xs:decimal" minOccurs="0"/>
+      <xs:element name="KZ044" type="xs:decimal" minOccurs="0"/>
+      <xs:element name="KZ032" type="xs:decimal" minOccurs="0"/>
+      <xs:element name="KZ070" type="xs:decimal" minOccurs="0"/>
+      <xs:element name="KZ071" type="xs:decimal" minOccurs="0"/>
+      <xs:element name="KZ072_BMGL" type="xs:decimal" minOccurs="0"/>
+      <xs:element name="KZ072_STEUER" type="xs:decimal" minOccurs="0"/>
+      <xs:element name="KZ073_BMGL" type="xs:decimal" minOccurs="0"/>
+      <xs:element name="KZ073_STEUER" type="xs:decimal" minOccurs="0"/>
+      <xs:element name="KZ008_BMGL" type="xs:decimal" minOccurs="0"/>
+      <xs:element name="KZ008_STEUER" type="xs:decimal" minOccurs="0"/>
+      <xs:element name="KZ088_BMGL" type="xs:decimal" minOccurs="0"/>
+      <xs:element name="KZ088_STEUER" type="xs:decimal" minOccurs="0"/>
+      <xs:element name="KZ076" type="xs:decimal" minOccurs="0"/>
+      <xs:element name="KZ077" type="xs:decimal" minOccurs="0"/>
+      <xs:element name="KZ060" type="xs:decimal" minOccurs="0"/>
+      <xs:element name="KZ061" type="xs:decimal" minOccurs="0"/>
+      <xs:element name="KZ083" type="xs:decimal" minOccurs="0"/>
+      <xs:element name="KZ065" type="xs:decimal" minOccurs="0"/>
+      <xs:element name="KZ066" type="xs:decimal" minOccurs="0"/>
+      <xs:element name="KZ082" type="xs:decimal" minOccurs="0"/>
+      <xs:element name="KZ087" type="xs:decimal" minOccurs="0"/>
+      <xs:element name="KZ089" type="xs:decimal" minOccurs="0"/>
+      <xs:element name="KZ064" type="xs:decimal" minOccurs="0"/>
+      <xs:element name="KZ062" type="xs:decimal" minOccurs="0"/>
+      <xs:element name="KZ063" type="xs:decimal" minOccurs="0"/>
+      <xs:element name="KZ067" type="xs:decimal" minOccurs="0"/>
+      <xs:element name="KZ090" type="xs:decimal" minOccurs="0"/>
+      <xs:element name="KZ095" type="xs:decimal" minOccurs="0"/>
+    </xs:all>
+  </xs:complexType>
+</xs:schema>"""
+
+
+def _validate_xml_against_xsd(xml_content: str) -> List[ValidationIssue]:
+    """Validate generated XML against XSD schema."""
+    issues = []
+    try:
+        from lxml import etree
+        schema_doc = etree.parse(BytesIO(UVA_XSD.encode("utf-8")))
+        schema = etree.XMLSchema(schema_doc)
+        xml_doc = etree.parse(BytesIO(xml_content.encode("utf-8")))
+
+        if not schema.validate(xml_doc):
+            for error in schema.error_log:
+                # Map XSD errors to human-readable German messages
+                msg = str(error.message)
+                readable = _translate_xsd_error(msg, error.line)
+                issues.append(ValidationIssue(
+                    severity=ValidationSeverity.ERROR,
+                    code="XSD_VALIDATION_ERROR",
+                    message=readable,
+                    field=f"line_{error.line}",
+                ))
+    except ImportError:
+        # lxml not available - do basic XML well-formedness check
+        try:
+            import xml.etree.ElementTree as ET
+            ET.fromstring(xml_content)
+        except ET.ParseError as e:
+            issues.append(ValidationIssue(
+                severity=ValidationSeverity.ERROR,
+                code="XML_PARSE_ERROR",
+                message=f"XML ist nicht wohlgeformt: {str(e)}",
+            ))
+        if not issues:
+            # Basic structural check without lxml
+            issues.extend(_basic_structure_check(xml_content))
+    except Exception as e:
+        issues.append(ValidationIssue(
+            severity=ValidationSeverity.WARNING,
+            code="XSD_CHECK_FAILED",
+            message=f"XSD-Validierung konnte nicht durchgeführt werden: {type(e).__name__}",
+        ))
+    return issues
+
+
+def _translate_xsd_error(msg: str, line: int) -> str:
+    """Translate XSD error to human-readable German."""
+    if "element is not expected" in msg.lower():
+        return f"Zeile {line}: Unerwartetes XML-Element. Bitte Struktur prüfen."
+    if "not valid" in msg.lower():
+        return f"Zeile {line}: Ungültiger Wert – {msg}"
+    if "missing" in msg.lower():
+        return f"Zeile {line}: Pflichtfeld fehlt – {msg}"
+    return f"Zeile {line}: {msg}"
+
+
+def _basic_structure_check(xml_content: str) -> List[ValidationIssue]:
+    """Basic structure check without lxml."""
+    issues = []
+    import xml.etree.ElementTree as ET
+    root = ET.fromstring(xml_content)
+
+    # Check root element
+    if root.tag != "ERKLAERUNGENPAKET":
+        issues.append(ValidationIssue(
+            severity=ValidationSeverity.ERROR,
+            code="XML_ROOT_INVALID",
+            message=f"Root-Element ist '{root.tag}', erwartet 'ERKLAERUNGENPAKET'",
+        ))
+        return issues
+
+    # Check INFO_DATEN
+    info = root.find("INFO_DATEN")
+    if info is None:
+        issues.append(ValidationIssue(
+            severity=ValidationSeverity.ERROR,
+            code="XML_MISSING_INFO",
+            message="Pflichtblock 'INFO_DATEN' fehlt im XML",
+        ))
+    else:
+        for required in ["ART", "STEUERNUMMER", "ZEITRAUM"]:
+            el = info.find(required)
+            if el is None or not (el.text or "").strip():
+                issues.append(ValidationIssue(
+                    severity=ValidationSeverity.ERROR,
+                    code=f"XML_MISSING_{required}",
+                    message=f"Pflichtfeld '{required}' in INFO_DATEN fehlt oder ist leer",
+                ))
+
+    # Check ERKLAERUNG
+    erkl = root.find("ERKLAERUNG")
+    if erkl is None:
+        issues.append(ValidationIssue(
+            severity=ValidationSeverity.ERROR,
+            code="XML_MISSING_ERKLAERUNG",
+            message="Pflichtblock 'ERKLAERUNG' fehlt",
+        ))
+    else:
+        art = erkl.get("art")
+        if art != "U30":
+            issues.append(ValidationIssue(
+                severity=ValidationSeverity.ERROR,
+                code="XML_WRONG_ART",
+                message=f"Erklärungsart ist '{art}', erwartet 'U30'",
+            ))
+        kz_block = erkl.find("KENNZAHLEN")
+        if kz_block is None:
+            issues.append(ValidationIssue(
+                severity=ValidationSeverity.ERROR,
+                code="XML_MISSING_KZ",
+                message="KENNZAHLEN-Block fehlt in der Erklärung",
+            ))
+        else:
+            # Check KZ095 is present (Pflichtfeld)
+            kz095 = kz_block.find("KZ095")
+            if kz095 is None:
+                issues.append(ValidationIssue(
+                    severity=ValidationSeverity.ERROR,
+                    code="XML_MISSING_KZ095",
+                    message="Pflicht-Kennzahl KZ095 (Vorauszahlung/Überschuss) fehlt",
+                ))
+            # Check KZ000 is present
+            kz000 = kz_block.find("KZ000")
+            if kz000 is None:
+                issues.append(ValidationIssue(
+                    severity=ValidationSeverity.WARNING,
+                    code="XML_MISSING_KZ000",
+                    message="KZ000 (Gesamtbetrag Lieferungen) fehlt – Leermeldung?",
+                ))
+
+    return issues
 
 logger = logging.getLogger(__name__)
 
