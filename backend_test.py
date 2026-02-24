@@ -336,7 +336,7 @@ class HardeningTestSuite:
             was_duplicate = data.get("was_duplicate") == False  # Should be false for new key
             has_correct_key = data.get("idempotency_key") == "test-idem-002"
             
-            if success and was_duplicate == False and has_correct_key:
+            if success and was_duplicate and has_correct_key:
                 self.log_result(
                     "Idempotency (Different Key)", True,
                     "Different idempotency key for same period works (new key, same period allowed)",
