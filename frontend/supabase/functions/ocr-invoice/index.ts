@@ -56,8 +56,22 @@ serve(async (req) => {
       });
     }
 
-    // Update status to processing
-    await supabase.from("invoices").update({ ocr_status: "processing" }).eq("id", invoiceId);
+    // Verify invoice ownership before processing
+    const { data: ownerCheck, error: ownerError } = await supabase
+      .from("invoices")
+      .select("id")
+      .eq("id", invoiceId)
+      .eq("user_id", user.id)
+      .maybeSingle();
+
+    if (ownerError || !ownerCheck) {
+      return new Response(JSON.stringify({ error: "Rechnung nicht gefunden oder keine Berechtigung" }), {
+        status: 403, headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
+    // Update status to processing (with ownership check)
+    await supabase.from("invoices").update({ ocr_status: "processing" }).eq("id", invoiceId).eq("user_id", user.id);
 
     // Download the file to get base64 - use service role for private bucket
     let fileBuffer: ArrayBuffer;
