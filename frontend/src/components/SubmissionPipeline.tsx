@@ -208,6 +208,20 @@ export const SubmissionPipeline: React.FC<SubmissionPipelineProps> = ({
             <h3 className="text-lg font-semibold text-gray-900 mb-4">
               Einreichung bestätigen
             </h3>
+
+            {/* Freigabepflicht-Warnung */}
+            <div className="bg-red-50 border border-red-200 rounded-lg p-3 mb-4">
+              <p className="text-sm font-medium text-red-800 flex items-center gap-2">
+                <AlertOctagon className="w-4 h-4 flex-shrink-0" />
+                Freigabepflicht
+              </p>
+              <p className="text-xs text-red-700 mt-1">
+                Ich bestätige, dass ich die UVA-Werte geprüft habe und die Einreichung
+                bei FinanzOnline auf eigene Verantwortung erfolgt. Diese Software ersetzt
+                keine steuerliche Beratung.
+              </p>
+            </div>
+
             <p className="text-sm text-gray-600 mb-4">
               UVA {String(month).padStart(2, "0")}/{year} als bei FinanzOnline eingereicht markieren.
             </p>
