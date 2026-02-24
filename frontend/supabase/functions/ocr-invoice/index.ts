@@ -198,18 +198,18 @@ Gib ein confidence-Feld (0-100) an.`,
       console.error("AI error:", aiResponse.status, errText);
       
       if (aiResponse.status === 429) {
-        await supabase.from("invoices").update({ ocr_status: "error" }).eq("id", invoiceId);
+        await supabase.from("invoices").update({ ocr_status: "error" }).eq("id", invoiceId).eq("user_id", user.id);
         return new Response(JSON.stringify({ error: "Zu viele Anfragen. Bitte versuchen Sie es in einer Minute erneut." }), {
           status: 429, headers: { ...corsHeaders, "Content-Type": "application/json" },
         });
       }
       if (aiResponse.status === 402) {
-        await supabase.from("invoices").update({ ocr_status: "error" }).eq("id", invoiceId);
+        await supabase.from("invoices").update({ ocr_status: "error" }).eq("id", invoiceId).eq("user_id", user.id);
         return new Response(JSON.stringify({ error: "AI-Kontingent aufgebraucht." }), {
           status: 402, headers: { ...corsHeaders, "Content-Type": "application/json" },
         });
       }
-      await supabase.from("invoices").update({ ocr_status: "error" }).eq("id", invoiceId);
+      await supabase.from("invoices").update({ ocr_status: "error" }).eq("id", invoiceId).eq("user_id", user.id);
       throw new Error("AI_PROCESSING_FAILED");
     }
 
