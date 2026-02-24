@@ -506,10 +506,15 @@ def build_uva_xml(request: XMLExportRequest) -> XMLExportResponse:
 
     filename = f"UVA_{year}_{month_str}.xml"
 
+    # ── XSD / Structure Validation ──
+    xsd_issues = _validate_xml_against_xsd(xml_content)
+    all_issues = validation_issues + xsd_issues
+    xsd_has_errors = any(i.severity == ValidationSeverity.ERROR for i in xsd_issues)
+
     return XMLExportResponse(
-        success=True,
+        success=not xsd_has_errors,
         xml_content=xml_content,
         filename=filename,
-        validation_passed=not has_errors,
-        validation_issues=validation_issues,
+        validation_passed=not any(i.severity == ValidationSeverity.ERROR for i in all_issues),
+        validation_issues=all_issues,
     )
