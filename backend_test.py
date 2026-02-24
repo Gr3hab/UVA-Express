@@ -844,8 +844,8 @@ def main():
                 if line.strip().startswith('REACT_APP_BACKEND_URL='):
                     backend_url = line.strip().split('=', 1)[1]
                     break
-        else:
-            backend_url = "https://compliance-ready-8.preview.emergentagent.com"
+            else:
+                backend_url = "https://compliance-ready-8.preview.emergentagent.com"
     except:
         backend_url = "https://compliance-ready-8.preview.emergentagent.com"
     
