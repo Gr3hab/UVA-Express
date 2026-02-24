@@ -270,7 +270,7 @@ class HardeningTestSuite:
             was_duplicate = data.get("was_duplicate") == False
             has_idempotency_key = data.get("idempotency_key") == "test-idem-001"
             
-            if success and was_duplicate == False and has_idempotency_key:
+            if success and was_duplicate and has_idempotency_key:
                 self.log_result(
                     "Idempotency (First)", True,
                     "First submission with idempotency key succeeds, was_duplicate=false",
