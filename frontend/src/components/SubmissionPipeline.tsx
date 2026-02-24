@@ -51,6 +51,19 @@ export const SubmissionPipeline: React.FC<SubmissionPipelineProps> = ({
 
   return (
     <div className="space-y-6">
+      {/* V1 Disclaimer */}
+      <div className="bg-amber-50 border border-amber-200 rounded-xl p-4 flex items-start gap-3">
+        <AlertOctagon className="w-5 h-5 text-amber-600 flex-shrink-0 mt-0.5" />
+        <div>
+          <p className="text-sm font-semibold text-amber-800">Hinweis: {V1_DISCLAIMER}</p>
+          <p className="text-xs text-amber-700 mt-1">
+            Die UVA-Berechnung dient als Arbeitshilfe. Die finale Verantwortung für die Richtigkeit
+            der Angaben liegt beim Steuerpflichtigen bzw. dessen steuerlichen Vertreter.
+            Alle Werte müssen vor der Einreichung bei FinanzOnline geprüft und freigegeben werden.
+          </p>
+        </div>
+      </div>
+
       {/* Status Timeline */}
       <div className="bg-white rounded-xl border border-gray-200 p-6">
         <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2">
