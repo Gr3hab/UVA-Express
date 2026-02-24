@@ -624,18 +624,18 @@ const UVA = () => {
                       <p className="text-xs text-muted-foreground mt-0.5">§ 12 UStG – Summe aller abziehbaren Vorsteuern</p>
                     </div>
                     <ColumnHeaders showNetto={false} ustLabel="Vorsteuer" />
-                    <KZLine kz="060" label="Gesamtbetrag der Vorsteuern" tooltip="§ 12 Abs 1 Z 1 – Vorsteuern aus Rechnungen anderer Unternehmer" ust={n(p.kz060_vorsteuer)} showNetto={false} />
-                    <KZLine kz="061" label="Vorsteuern aus IG Erwerben" tooltip="§ 12 Abs 1 Z 2 lit a – Vorsteuerabzug aus IG Erwerben" ust={n(p.kz061_vorsteuer)} showNetto={false} />
-                    <KZLine kz="083" label="Vorsteuern § 19 Abs 1, 1c, 1e" tooltip="Vorsteuerabzug aus Reverse-Charge-Leistungen" ust={n(p.kz083_vorsteuer)} showNetto={false} />
-                    <KZLine kz="065" label="Einfuhr-USt (§ 12 Abs 1 Z 2 lit b)" tooltip="Vorsteuerabzug aus der Einfuhr" ust={n(p.kz065_vorsteuer)} showNetto={false} />
-                    <KZLine kz="066" label="Vorsteuern § 19 Abs 1 dritter/vierter Satz" ust={n(p.kz066_vorsteuer)} showNetto={false} />
-                    <KZLine kz="082" label="Vorsteuern § 12 Abs 16" tooltip="Vorsteuerabzug bei Pauschalierung" ust={n(p.kz082_vorsteuer)} showNetto={false} />
-                    <KZLine kz="087" label="Vorsteuern § 19 Abs 1a (Bauleistungen)" ust={n(p.kz087_vorsteuer)} showNetto={false} />
-                    <KZLine kz="089" label="Vorsteuern § 19 Abs 1b, 1d" tooltip="Schrott, Sicherungseigentum" ust={n(p.kz089_vorsteuer)} showNetto={false} />
-                    <KZLine kz="064" label="Vorsteuern Art. 25 Abs 5 (Dreiecksgeschäfte)" ust={n(p.kz064_vorsteuer)} showNetto={false} />
-                    <KZLine kz="062" label="EUSt (§ 12 Abs 1 Z 2 lit a)" tooltip="Einfuhrumsatzsteuer direkt am Abgabenkonto" ust={n(p.kz062_vorsteuer)} showNetto={false} />
-                    <KZLine kz="063" label="Vorsteuern Reisevorleistungen (§ 23 Abs 8)" ust={n(p.kz063_vorsteuer)} showNetto={false} />
-                    <KZLine kz="067" label="Vorsteuerberichtigung (§ 12 Abs 10–12)" tooltip="Berichtigung bei Änderung der Verhältnisse" ust={n(p.kz067_vorsteuer)} showNetto={false} />
+                    <KZLine kz="060" label="Gesamtbetrag der Vorsteuern" tooltip="§ 12 Abs 1 Z 1 – Vorsteuern aus Rechnungen anderer Unternehmer" ust={kzVal("kz060_vorsteuer")} showNetto={false} />
+                    <KZLine kz="061" label="Vorsteuern aus IG Erwerben" tooltip="§ 12 Abs 1 Z 2 lit a – Vorsteuerabzug aus IG Erwerben" ust={kzVal("kz061_vorsteuer")} showNetto={false} />
+                    <KZLine kz="083" label="Vorsteuern § 19 Abs 1, 1c, 1e" tooltip="Vorsteuerabzug aus Reverse-Charge-Leistungen" ust={kzVal("kz083_vorsteuer")} showNetto={false} />
+                    <KZLine kz="065" label="Einfuhr-USt (§ 12 Abs 1 Z 2 lit b)" tooltip="Vorsteuerabzug aus der Einfuhr" ust={kzVal("kz065_vorsteuer")} showNetto={false} />
+                    <KZLine kz="066" label="Vorsteuern § 19 Abs 1 dritter/vierter Satz" ust={kzVal("kz066_vorsteuer")} showNetto={false} />
+                    <KZLine kz="082" label="Vorsteuern § 12 Abs 16" tooltip="Vorsteuerabzug bei Pauschalierung" ust={kzVal("kz082_vorsteuer")} showNetto={false} />
+                    <KZLine kz="087" label="Vorsteuern § 19 Abs 1a (Bauleistungen)" ust={kzVal("kz087_vorsteuer")} showNetto={false} />
+                    <KZLine kz="089" label="Vorsteuern § 19 Abs 1b, 1d" tooltip="Schrott, Sicherungseigentum" ust={kzVal("kz089_vorsteuer")} showNetto={false} />
+                    <KZLine kz="064" label="Vorsteuern Art. 25 Abs 5 (Dreiecksgeschäfte)" ust={kzVal("kz064_vorsteuer")} showNetto={false} />
+                    <KZLine kz="062" label="EUSt (§ 12 Abs 1 Z 2 lit a)" tooltip="Einfuhrumsatzsteuer direkt am Abgabenkonto" ust={kzVal("kz062_vorsteuer")} showNetto={false} />
+                    <KZLine kz="063" label="Vorsteuern Reisevorleistungen (§ 23 Abs 8)" ust={kzVal("kz063_vorsteuer")} showNetto={false} />
+                    <KZLine kz="067" label="Vorsteuerberichtigung (§ 12 Abs 10–12)" tooltip="Berichtigung bei Änderung der Verhältnisse" ust={kzVal("kz067_vorsteuer")} showNetto={false} />
                     <KZLine kz="" label="Zwischensumme Vorsteuern" ust={summeVorsteuer} isSubTotal showNetto={false} />
                   </div>
 
