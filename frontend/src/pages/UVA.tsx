@@ -536,7 +536,7 @@ const UVA = () => {
               )}
 
               {activeTab === "formular" && (
-
+              <>
               {/* Full U30 Form */}
               <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
                 {/* LEFT COLUMN */}
