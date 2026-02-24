@@ -368,6 +368,10 @@ class SubmissionConfirmRequest(BaseModel):
     """Confirm manual submission."""
     year: int = Field(..., ge=2000, le=2100)
     month: int = Field(..., ge=1, le=12)
+    idempotency_key: Optional[str] = Field(
+        default=None,
+        description="Idempotenz-Schlüssel: bei Wiederholung gleiche Antwort, keine Doppelverarbeitung"
+    )
     confirmation_note: Optional[str] = None
     finanzonline_reference: Optional[str] = None  # Manual ref number
 
@@ -378,6 +382,9 @@ class SubmissionConfirmResponse(BaseModel):
     new_status: SubmissionStatus
     timestamp: str = Field(default_factory=lambda: datetime.utcnow().isoformat())
     message: str
+    idempotency_key: Optional[str] = None
+    was_duplicate: bool = False
+    audit_entry_id: Optional[str] = None
 
 
 # ═══════════════════════════════════════════════════════════════════
